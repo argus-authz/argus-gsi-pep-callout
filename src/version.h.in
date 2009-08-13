@@ -1,0 +1,9 @@
+static
+globus_version_t local_version = 
+{
+    @VERSION_MAJOR@,
+    @VERSION_MINOR@,
+    @VERSION_TIMESTAMP@,
+    @VERSION_REVISION@
+};
+
