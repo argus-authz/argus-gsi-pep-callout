@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * $Id: libpep-c.c 1194 2009-06-19 12:54:48Z vtschopp $
+ * $Id$
  */
 
 #include <globus_common.h>
 #include <gssapi.h>
-#include <globus_gss_assist.h> // needed ??
 #include <globus_gsi_credential.h>
 
 #include <pep/pep.h>

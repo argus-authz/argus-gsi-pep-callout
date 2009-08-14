@@ -93,6 +93,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 src/version.h
+test/Makefile
 ])
 
 AC_OUTPUT

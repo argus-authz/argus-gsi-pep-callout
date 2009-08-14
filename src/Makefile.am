@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.am 1194 2009-06-19 12:54:48Z vtschopp $
+# $Id$
 #
 
 #
@@ -20,7 +20,6 @@ libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_SOURCES = \
 
 # compiler flags
 libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_CFLAGS = \
-	-DDEBUG \
     $(GLITE_CFLAGS) \
     $(GLOBUS_NOTHR_CFLAGS)
 

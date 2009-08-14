@@ -22,7 +22,7 @@
  * If you redistribute this file, with or without
  * modifications, you must include this notice in the file.
  *
- * $Id: libpep-c.c 1194 2009-06-19 12:54:48Z vtschopp $
+ * $Id$
  */
 
 #include "gsi_pep_callout.h"

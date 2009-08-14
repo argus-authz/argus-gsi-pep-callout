@@ -1,0 +1,4 @@
+SVNROOT=svn+ssh://vtschopp@svn.cern.ch/reps/glxa/gsi-pep-callout/trunk
+CVSROOT=$SVNROOT
+export SVNROOT CVSROOT
+

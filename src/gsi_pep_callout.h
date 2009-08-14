@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * $Id: libpep-c.c 1194 2009-06-19 12:54:48Z vtschopp $
+ * $Id$
  */
 
 #ifndef _GSI_PEP_CALLOUT_H_
