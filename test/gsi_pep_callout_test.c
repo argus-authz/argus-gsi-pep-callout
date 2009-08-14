@@ -142,7 +142,6 @@ void *
 server_func(void * arg) {
 	struct context_arg * server_args;
 	globus_bool_t bool_rc;
-	globus_result_t g_result;
 	gss_ctx_id_t gss_context = GSS_C_NO_CONTEXT;
 	char * user_id = NULL;
 	gss_cred_id_t delegated_cred = GSS_C_NO_CREDENTIAL;
@@ -154,7 +153,7 @@ server_func(void * arg) {
 					server_args->credential, &gss_context, &user_id,
 					&delegated_cred);
 
-	fprintf(stderr,"user_id: %s\n",user_id);
+	fprintf(stderr,"Authentication: user_id: %s\n",user_id);
 
 	if (bool_rc != GLOBUS_TRUE) {
 		fprintf(stderr, "SERVER: Authentication failed\n");
@@ -165,13 +164,12 @@ server_func(void * arg) {
 	size_t identity_l= 1024;
 	char identity[1024];
 	bool_rc= gsi_pep_callout_test_authz(5,gss_context,service,GLOBUS_NULL,&identity,identity_l);
-	if (g_result != GLOBUS_TRUE) {
+	if (bool_rc != GLOBUS_TRUE) {
 		fprintf(stderr, "SERVER: Authorization failed\n");
 		exit(1);
 	}
-	else {
-		fprintf(stdout,"mapped to identity: %s\n",identity);
-	}
+
+	fprintf(stderr,"Authorization: identity: %s\n",identity);
 
 	bool_rc = globus_gsi_gssapi_test_receive_hello(server_args->fd,
 			gss_context);
