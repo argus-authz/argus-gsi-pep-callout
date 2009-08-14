@@ -65,6 +65,9 @@ static globus_result_t pep_client_configure(void);
 static globus_result_t pep_client_create_request(const char *certchain,const char *resourceid, const char *actionid, xacml_request_t ** out_request);
 static globus_result_t pep_client_authorize(const char *peer, const char * cert_chain, const char * actionid, char ** out_identity);
 
+static int debug_xacml_request(int debug_level, const xacml_request_t * request);
+static int debug_xacml_response(int debug_level, const xacml_response_t * response);
+
 /*
  * internal variable
  */
@@ -583,7 +586,7 @@ static globus_result_t pep_client_configure(void) {
 
 	GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("XXX: pep_setoption(PEP_OPTION_LOG_STDERR,stderr)\n"));
 	pep_setoption(PEP_OPTION_LOG_STDERR,stderr);
-	if (gsi_pep_callout_debug_level >= 5) {
+	if (gsi_pep_callout_debug_level >= 9) {
 		GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("XXX: pep_setoption(PEP_OPTION_LOG_LEVEL,PEP_LOGLEVEL_DEBUG)\n"));
 		pep_setoption(PEP_OPTION_LOG_LEVEL,PEP_LOGLEVEL_DEBUG);
 	}
@@ -688,7 +691,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 						GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XACML Obligation[%s]: %s=%s\n", obligation_id,attr_id,value));
 						if (strcmp(XACML_AUTHZINTEROP_OBLIGATION_USERNAME,obligation_id)==0) {
 							if (strcmp(XACML_AUTHZINTEROP_OBLIGATION_ATTR_USERNAME,attr_id)==0) {
-								GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("Username: %s",value));
+								GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("Username: %s\n",value));
 								*out_identity= strdup(value);
 								if (*out_identity==NULL) {
 									GSI_PEP_CALLOUT_ERRNO_ERROR(
@@ -746,6 +749,9 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
     	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
+
+	debug_xacml_request(9,request);
+
 	// 3. authorize
 	xacml_response_t * response= NULL;
 	pep_error_t pep_rc= PEP_OK;
@@ -761,6 +767,8 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 	}
 
 	GSI_PEP_CALLOUT_DEBUG_PRINTF(5,("call pep_authorize(req,resp): %d\n",pep_rc));
+	debug_xacml_request(9,request);
+	debug_xacml_response(9,response);
 
 	// 4. analyse XACML response
 	if ((result= pep_client_parse_response(response,local_identity))!=GLOBUS_SUCCESS) {
@@ -793,9 +801,6 @@ static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_res
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Request"));
-		//xacml_subject_delete(subject);
-		//xacml_resource_delete(resource);
-		//xacml_action_delete(action);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
@@ -837,9 +842,8 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 		return result;
 	}
 	// Subject cert-chain
-	xacml_subject_t * subject= *out_subject;
-	subject= xacml_subject_create();
-	if (subject==NULL) {
+	*out_subject= xacml_subject_create();
+	if (*out_subject==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
@@ -853,14 +857,14 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Subject/Attribute: %s",XACML_AUTHZINTEROP_SUBJECT_CERTCHAIN));
-		xacml_subject_delete(subject);
+		xacml_subject_delete(*out_subject);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
 	// TODO: error handling
 	xacml_attribute_setdatatype(subject_attr_id,XACML_DATATYPE_BASE64BINARY);
 	xacml_attribute_addvalue(subject_attr_id,certchain);
-	xacml_subject_addattribute(subject,subject_attr_id);
+	xacml_subject_addattribute(*out_subject,subject_attr_id);
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 	return result;
 }
@@ -885,9 +889,8 @@ static globus_result_t xacml_create_resource_id(const char * resourceid, xacml_r
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
-	xacml_resource_t * resource= *out_resource;
-	resource= xacml_resource_create();
-	if (resource==NULL) {
+	*out_resource= xacml_resource_create();
+	if (*out_resource==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
@@ -901,12 +904,12 @@ static globus_result_t xacml_create_resource_id(const char * resourceid, xacml_r
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Resource/Attribute: %s",XACML_RESOURCE_ID));
-		xacml_resource_delete(resource);
+		xacml_resource_delete(*out_resource);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
 	xacml_attribute_addvalue(resource_attr_id,resourceid);
-	xacml_resource_addattribute(resource,resource_attr_id);
+	xacml_resource_addattribute(*out_resource,resource_attr_id);
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 	return result;
 }
@@ -931,9 +934,8 @@ static globus_result_t xacml_create_action_id(const char * actionid, xacml_actio
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
-	xacml_action_t * action= *out_action;
-	action= xacml_action_create();
-	if (action==NULL) {
+	*out_action= xacml_action_create();
+	if (*out_action==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
@@ -947,12 +949,12 @@ static globus_result_t xacml_create_action_id(const char * actionid, xacml_actio
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Action/Attribute: %s",XACML_ACTION_ID));
-		xacml_action_delete(action);
+		xacml_action_delete(*out_action);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 		return result;
 	}
 	xacml_attribute_addvalue(action_attr_id,actionid);
-	xacml_action_addattribute(action,action_attr_id);
+	xacml_action_addattribute(*out_action,action_attr_id);
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
 	return result;
 }
@@ -1012,6 +1014,189 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 
 	return result;
 }
+
+/**
+ * Debug a XACML request. NULL values are not displayed.
+ */
+static int debug_xacml_request(int debug_level, const xacml_request_t * request) {
+	// function name for error macros
+	static char * _function_name_ = "debug_xacml_request";
+
+	if (request == NULL) {
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("ERROR: request is NULL\n"));
+		return 1;
+	}
+	if (GSI_PEP_CALLOUT_DEBUG(debug_level)) {
+		size_t subjects_l= xacml_request_subjects_length(request);
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request: %d subjects\n", (int)subjects_l));
+		int i= 0;
+		for (i= 0; i<subjects_l; i++) {
+			xacml_subject_t * subject= xacml_request_getsubject(request,i);
+			const char * category= xacml_subject_getcategory(subject);
+			if (category)
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.subject[%d].category= %s\n", i, category));
+			size_t attrs_l= xacml_subject_attributes_length(subject);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.subject[%d]: %d attributes\n", i, (int)attrs_l));
+			int j= 0;
+			for(j= 0; j<attrs_l; j++) {
+				xacml_attribute_t * attr= xacml_subject_getattribute(subject,j);
+				const char * attr_id= xacml_attribute_getid(attr);
+				if (attr_id)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.subject[%d].attribute[%d].id= %s\n", i,j,attr_id));
+				const char * attr_datatype= xacml_attribute_getdatatype(attr);
+				if (attr_datatype)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.subject[%d].attribute[%d].datatype= %s\n", i,j,attr_datatype));
+				const char * attr_issuer= xacml_attribute_getissuer(attr);
+				if (attr_issuer)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.subject[%d].attribute[%d].issuer= %s\n", i,j,attr_issuer));
+				size_t values_l= xacml_attribute_values_length(attr);
+				//show_info("request.subject[%d].attribute[%d]: %d values", i,j,(int)values_l);
+				int k= 0;
+				for (k= 0; k<values_l; k++) {
+					const char * attr_value= xacml_attribute_getvalue(attr,k);
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.subject[%d].attribute[%d].value[%d]= %s\n", i,j,k,attr_value));
+				}
+			}
+		}
+		size_t resources_l= xacml_request_resources_length(request);
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request: %d resources\n", (int)resources_l));
+		for (i= 0; i<resources_l; i++) {
+			xacml_resource_t * resource= xacml_request_getresource(request,i);
+			const char * res_content= xacml_resource_getcontent(resource);
+			if (res_content)
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.resource[%d].content= %s\n", i, res_content));
+			size_t attrs_l= xacml_resource_attributes_length(resource);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.resource[%d]: %d attributes\n", i, (int)attrs_l));
+			int j= 0;
+			for(j= 0; j<attrs_l; j++) {
+				xacml_attribute_t * attr= xacml_resource_getattribute(resource,j);
+				const char * attr_id= xacml_attribute_getid(attr);
+				if (attr_id)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.resource[%d].attribute[%d].id= %s\n", i,j,attr_id));
+				const char * attr_datatype= xacml_attribute_getdatatype(attr);
+				if (attr_datatype)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.resource[%d].attribute[%d].datatype= %s\n", i,j,attr_datatype));
+				const char * attr_issuer= xacml_attribute_getissuer(attr);
+				if (attr_issuer)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.resource[%d].attribute[%d].issuer= %s\n", i,j,attr_issuer));
+				size_t values_l= xacml_attribute_values_length(attr);
+				//show_info("request.resource[%d].attribute[%d]: %d values", i,j,(int)values_l);
+				int k= 0;
+				for (k= 0; k<values_l; k++) {
+					const char * attr_value= xacml_attribute_getvalue(attr,k);
+					if (attr_value)
+						GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.resource[%d].attribute[%d].value[%d]= %s\n", i,j,k,attr_value));
+				}
+			}
+		}
+		int j= 0;
+		xacml_action_t * action= xacml_request_getaction(request);
+		if (action) {
+			size_t act_attrs_l= xacml_action_attributes_length(action);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.action: %d attributes\n",(int)act_attrs_l));
+			for (j= 0; j<act_attrs_l; j++) {
+				xacml_attribute_t * attr= xacml_action_getattribute(action,j);
+				const char * attr_id= xacml_attribute_getid(attr);
+				if (attr_id)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.action.attribute[%d].id= %s\n", j,attr_id));
+				const char * attr_datatype= xacml_attribute_getdatatype(attr);
+				if (attr_datatype)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.action.attribute[%d].datatype= %s\n", j,attr_datatype));
+				const char * attr_issuer= xacml_attribute_getissuer(attr);
+				if (attr_issuer)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.action.attribute[%d].issuer= %s\n", j,attr_issuer));
+				size_t values_l= xacml_attribute_values_length(attr);
+				//show_info("request.action.attribute[%d]: %d values", j,(int)values_l);
+				int k= 0;
+				for (k= 0; k<values_l; k++) {
+					const char * attr_value= xacml_attribute_getvalue(attr,k);
+					if (attr_value)
+						GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.action.attribute[%d].value[%d]= %s\n",j,k,attr_value));
+				}
+			}
+		}
+		xacml_environment_t * env= xacml_request_getenvironment(request);
+		if (env) {
+			size_t env_attrs_l= xacml_environment_attributes_length(env);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.environment: %d attributes\n",(int)env_attrs_l));
+			for (j= 0; j<env_attrs_l; j++) {
+				xacml_attribute_t * attr= xacml_environment_getattribute(env,j);
+				const char * attr_id= xacml_attribute_getid(attr);
+				if (attr_id)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.environment.attribute[%d].id= %s\n", j,attr_id));
+				const char * attr_datatype= xacml_attribute_getdatatype(attr);
+				if (attr_datatype)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.environment.attribute[%d].datatype= %s\n", j,attr_datatype));
+				const char * attr_issuer= xacml_attribute_getissuer(attr);
+				if (attr_issuer)
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.environment.attribute[%d].issuer= %s\n", j,attr_issuer));
+				size_t values_l= xacml_attribute_values_length(attr);
+				//show_info("request.environment.attribute[%d]: %d values", j,(int)values_l);
+				int k= 0;
+				for (k= 0; k<values_l; k++) {
+					const char * attr_value= xacml_attribute_getvalue(attr,k);
+					if (attr_value)
+						GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("request.environment.attribute[%d].value[%d]= %s\n",j,k,attr_value));
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+/**
+ * Dumps a XACML response.
+ */
+static int debug_xacml_response(int debug_level,const xacml_response_t * response) {
+	// function name for error macros
+	static char * _function_name_ = "debug_xacml_response";
+
+	if (response == NULL) {
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("ERROR: response is NULL\n"));
+		return 1;
+	}
+	if (GSI_PEP_CALLOUT_DEBUG(debug_level)) {
+		size_t results_l= xacml_response_results_length(response);
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response: %d results\n", (int)results_l));
+		int i= 0;
+		for(i= 0; i<results_l; i++) {
+			xacml_result_t * result= xacml_response_getresult(response,i);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].decision= %s\n", i, decision_str(xacml_result_getdecision(result))));
+
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].resourceid= %s\n", i, xacml_result_getresourceid(result)));
+			xacml_status_t * status= xacml_result_getstatus(result);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].status.message= %s\n", i, xacml_status_getmessage(status)));
+			xacml_statuscode_t * statuscode= xacml_status_getcode(status);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].status.code.value= %s\n", i, xacml_statuscode_getvalue(statuscode)));
+			xacml_statuscode_t * subcode= xacml_statuscode_getsubcode(statuscode);
+			if (subcode != NULL) {
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].status.code.subcode.value= %s\n", i, xacml_statuscode_getvalue(subcode)));
+			}
+			size_t obligations_l= xacml_result_obligations_length(result);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d]: %d obligations\n", i, (int)obligations_l));
+			int j=0;
+			for(j= 0; j<obligations_l; j++) {
+				xacml_obligation_t * obligation= xacml_result_getobligation(result,j);
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].obligation[%d].id= %s\n",i,j, xacml_obligation_getid(obligation)));
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].obligation[%d].fulfillOn= %s\n",i,j, decision_str(xacml_obligation_getfulfillon(obligation))));
+				size_t attrs_l= xacml_obligation_attributeassignments_length(obligation);
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].obligation[%d]: %d attribute assignments\n",i,j,(int)attrs_l));
+				int k= 0;
+				for (k= 0; k<attrs_l; k++) {
+					xacml_attributeassignment_t * attr= xacml_obligation_getattributeassignment(obligation,k);
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].obligation[%d].attributeassignment[%d].id= %s\n",i,j,k,xacml_attributeassignment_getid(attr)));
+					size_t values_l= xacml_attributeassignment_values_length(attr);
+					int l= 0;
+					for (l= 0; l<values_l; l++) {
+						GSI_PEP_CALLOUT_DEBUG_PRINTF(debug_level,("response.result[%d].obligation[%d].attributeassignment[%d].value[%d]= %s\n",i,j,k,l,xacml_attributeassignment_getvalue(attr,l)));
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
 
 
 /**
