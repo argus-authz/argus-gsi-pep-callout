@@ -4,10 +4,10 @@
 
 #SUBDIRS = src test
 SUBDIRS = src
-EXTRA_DIST = autotools.sh
+EXTRA_DIST = autotools.sh 
 
 docdir = $(datadir)/doc/$(PACKAGE)
-doc_DATA = AUTHORS CHANGELOG LICENSE
+doc_DATA = AUTHORS CHANGELOG LICENSE etc/gsi-authz.conf etc/gsi-pep-callout.conf
 
 # Generate doxygen doc
 doxygen: doc/Doxyfile
