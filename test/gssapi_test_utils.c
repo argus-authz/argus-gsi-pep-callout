@@ -185,7 +185,7 @@ globus_bool_t globus_gsi_gssapi_test_send_hello(int fd, gss_ctx_id_t context) {
 	static char * hello = "HelloHello";
 	gss_buffer_desc send_token = GSS_C_EMPTY_BUFFER;
 	gss_buffer_desc input_token;
-	long rc;
+	long rc= 0;
 	long written = 0;
 
 	input_token.length = 11;
