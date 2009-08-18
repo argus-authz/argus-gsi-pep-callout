@@ -17,7 +17,7 @@ html-local: doxygen
 
 # Install doxygen doc in $(prefix)/share/doc/glite-authz-pep-gsi-callout/api
 htmldir = $(docdir)/api
-install-data-local: install-html
+#install-data-local: install-html
 
 uninstall-local: uninstall-html
 
