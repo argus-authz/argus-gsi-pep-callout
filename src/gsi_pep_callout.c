@@ -68,11 +68,6 @@ static globus_result_t pep_client_authorize(const char *peer, const char * cert_
 static int debug_xacml_request(int debug_level, const xacml_request_t * request);
 static int debug_xacml_response(int debug_level, const xacml_response_t * response);
 
-/*
- * internal variable
- */
-
-
 /**
  * ARGUS AuthZ Service PEP Callout Function
  *
@@ -125,7 +120,7 @@ globus_result_t authz_pep_callout(va_list ap)
     // active module
     globus_module_activate(GSI_PEP_CALLOUT_MODULE);
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
 
     // process va_list arguments
     gss_context= va_arg(ap, gss_ctx_id_t);
@@ -182,7 +177,7 @@ globus_result_t authz_pep_callout(va_list ap)
     }
 
     GSI_PEP_CALLOUT_DEBUG_PRINTF(
-    		5 /* level */,
+    		9 /* level */,
             ("X509 with chain:\n%s",
             cert_chain == NULL ? "NULL" : cert_chain));
 
@@ -225,8 +220,8 @@ globus_result_t authz_pep_callout(va_list ap)
 	{
 		strncpy(identity_buffer,local_identity,identity_buffer_l);
 	    GSI_PEP_CALLOUT_DEBUG_PRINTF(
-	    		1 /* level */,
-				("Mapped: %s to: %s\n",
+	    		2 /* level */,
+				("%s mapped to %s\n",
 				peer_name, identity_buffer));
 	}
 	free(local_identity);
@@ -239,7 +234,7 @@ error:
 
 	globus_module_deactivate(GSI_PEP_CALLOUT_MODULE);
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
 
     return result;
 }
@@ -256,7 +251,7 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
     int locally_initiated;
     gss_name_t peer;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     // get source and target peer and initiator
     major_status= gss_inquire_context(&minor_status,
@@ -270,7 +265,7 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
                                        GLOBUS_NULL);
     if (GSS_ERROR(major_status)) {
     	GSI_PEP_CALLOUT_GSS_ERROR(result, major_status, minor_status);
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
         return result;
     }
 
@@ -286,7 +281,7 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
                                        GLOBUS_NULL);
     if (GSS_ERROR(major_status)) {
     	GSI_PEP_CALLOUT_GSS_ERROR(result, major_status, minor_status);
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
         return result;
     }
 
@@ -299,7 +294,7 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
 		GSI_PEP_CALLOUT_GSS_ERROR(result, major_status, minor_status);
 		gss_release_name(&minor_status,&peer);
 
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
 
@@ -308,7 +303,7 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
 
 	gss_release_name(&minor_status,&peer);
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 
 	return result;
 }
@@ -334,7 +329,7 @@ static globus_result_t gss_cred_extract_cert(const gss_cred_id_t gss_cred, X509 
     gss_cred_id_desc * cred_desc= NULL;
     globus_gsi_cred_handle_t gsi_cred;
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     /* cast to gss_cred_id_desc */
     if (gss_cred != GSS_C_NO_CREDENTIAL) {
@@ -354,7 +349,7 @@ static globus_result_t gss_cred_extract_cert(const gss_cred_id_t gss_cred, X509 
             ("No GSS credential available"));
     }
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
     return result;
 }
 
@@ -371,7 +366,7 @@ static globus_result_t gss_cred_extract_cert_chain(const gss_cred_id_t gss_cred,
     gss_cred_id_desc * cred_desc= NULL;
     globus_gsi_cred_handle_t gsi_cred;
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     /* cast to gss_cred_id_desc */
     if (gss_cred != GSS_C_NO_CREDENTIAL) {
@@ -391,7 +386,7 @@ static globus_result_t gss_cred_extract_cert_chain(const gss_cred_id_t gss_cred,
             ("No GSS credential available"));
     }
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
     return result;
 }
 
@@ -455,7 +450,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
 	globus_result_t result= GLOBUS_SUCCESS;
     int i, rc= 0;
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     BIO * bio = BIO_new(BIO_s_mem());
     if (bio==NULL) {
@@ -463,7 +458,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
             result,
             GSI_PEP_CALLOUT_ERROR_OPENSSL,
             ("can't allocate PEM bio buffer"));
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
     	return result;
     }
     if ((rc= PEM_write_bio_X509(bio, (X509 *)x509)) != 1) {
@@ -472,7 +467,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
             GSI_PEP_CALLOUT_ERROR_OPENSSL,
             ("can't write PEM cert into bio buffer: %d",rc));
         BIO_free(bio);
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
     	return result;
     }
 
@@ -486,7 +481,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
                 GSI_PEP_CALLOUT_ERROR_OPENSSL,
                 ("can't write PEM cert chain %d into bio buffer: %d",i,rc));
             BIO_free(bio);
-        	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+        	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
         	return result;
         }
     }
@@ -497,7 +492,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
             GSI_PEP_CALLOUT_ERROR_OPENSSL,
             ("can't read PEM bio buffer: %d",rc));
     	BIO_free(bio);
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
     	return result;
     }
 
@@ -510,7 +505,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
     }
     BIO_free(bio);
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 
     return result;
 }
@@ -525,7 +520,7 @@ static globus_result_t pep_client_configure(void) {
 	const char * option= NULL;
 	const keyvalue_t * option_kv= NULL;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
 	const char * config= gsi_pep_callout_config_getfilename();
 	if ((result= gsi_pep_callout_config_read(config))!=GLOBUS_SUCCESS) {
@@ -533,7 +528,7 @@ static globus_result_t pep_client_configure(void) {
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
 				("Failed to read configuration file: %s",config));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
 	// set mandatory PEPd url(s)
@@ -543,18 +538,19 @@ static globus_result_t pep_client_configure(void) {
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
 				("Mandatory option %s missing from file: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_URL,config));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
 	do {
 		option= option_kv->value;
 		option_kv= option_kv->next;
+		GSI_PEP_CALLOUT_DEBUG_FPRINTF(3,("set PEP_OPTION_ENDPOINT_URL=%s\n",option));
 		if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_URL,option)) != PEP_OK) {
 			GSI_PEP_CALLOUT_ERROR(
 					result,
 					GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
 					("Failed to set PEP client option %s %s: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_URL,option,pep_strerror(pep_rc)));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 			return result;
 		}
 	} while (option_kv);
@@ -563,19 +559,20 @@ static globus_result_t pep_client_configure(void) {
 	if (option != NULL) {
 		int timeout= (int)strtol(option,NULL,10);
 		if (timeout>0) {
+			GSI_PEP_CALLOUT_DEBUG_FPRINTF(3,("set PEP_OPTION_ENDPOINT_URL=%d\n",timeout));
 			if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_TIMEOUT,timeout))!=PEP_OK) {
 				GSI_PEP_CALLOUT_ERROR(
 						result,
 						GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
 						("Failed to set PEP client option %s %s: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_TIMEOUT,option,pep_strerror(pep_rc)));
-				GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+				GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 				return result;
 			}
 		}
 	}
 	// TODO: other options???
 	// pep_ssl_validation on|off|1|0
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("XXX: pep_setoption(PEP_OPTION_ENDPOINT_SSL_VALIDATION,0)\n"));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XXX: set PEP_OPTION_ENDPOINT_SSL_VALIDATION=0\n"));
 	pep_setoption(PEP_OPTION_ENDPOINT_SSL_VALIDATION,0);
 	// pep_ssl_client_cert <filename>
 	// pep_ssl_client_key <filename>
@@ -584,13 +581,13 @@ static globus_result_t pep_client_configure(void) {
 	// pep_ssl_server_capath <directory>
 	// pep_log_level [0..5]
 
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("XXX: pep_setoption(PEP_OPTION_LOG_STDERR,stderr)\n"));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XXX: set PEP_OPTION_LOG_STDERR=stderr\n"));
 	pep_setoption(PEP_OPTION_LOG_STDERR,stderr);
 	if (gsi_pep_callout_debug_level >= 9) {
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("XXX: pep_setoption(PEP_OPTION_LOG_LEVEL,PEP_LOGLEVEL_DEBUG)\n"));
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XXX: set PEP_OPTION_LOG_LEVEL=PEP_LOGLEVEL_DEBUG\n"));
 		pep_setoption(PEP_OPTION_LOG_LEVEL,PEP_LOGLEVEL_DEBUG);
 	}
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 	return result;
 }
 
@@ -625,7 +622,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 	globus_result_t g_result= GLOBUS_SUCCESS;
 	globus_bool_t username_found= GLOBUS_FALSE;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(3);
 
 	int i= 0;
 	size_t results_l= xacml_response_results_length(response);
@@ -634,35 +631,35 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 				g_result,
 				GSI_PEP_CALLOUT_ERROR_AUTHZ,
 				("No XACML Results found"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(g_result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,g_result);
 		return g_result;
 	}
 	for (i= 0; i<results_l; i++) {
 		xacml_result_t * result= xacml_response_getresult(response,i);
 		const char * resource_id= xacml_result_getresourceid(result);
 		if (resource_id!=NULL) {
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XACML Resource: %s\n",resource_id));
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Resource: %s\n",resource_id));
 		}
 		xacml_decision_t decision= xacml_result_getdecision(result);
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XACML Decision: %s\n", decision_str(decision)));
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Decision: %s\n", decision_str(decision)));
 		if (decision!=XACML_DECISION_PERMIT) {
 			xacml_status_t * status= xacml_result_getstatus(result);
 			xacml_statuscode_t * statuscode= xacml_status_getcode(status);
 			const char * status_value= xacml_statuscode_getvalue(statuscode);
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XACML Status: %s\n", status_value));
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Status: %s\n", status_value));
 			const char * status_message= NULL;
 			// show status value and message only on not OK
 			if (strcmp(XACML_STATUSCODE_OK,status_value)!=0) {
 				status_message= xacml_status_getmessage(status);
 				if (status_message) {
-					GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XACML Status message: %s\n", status_message));
+					GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Status message: %s\n", status_message));
 				}
 			}
 			GSI_PEP_CALLOUT_ERROR(
 					g_result,
 					GSI_PEP_CALLOUT_ERROR_AUTHZ,
 					("XACML Decision: %s, XACML Status: %s",decision_str(decision),status_message ? status_message : status_value));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(g_result);
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,g_result);
 			return g_result;
 		}
 		size_t obligations_l= xacml_result_obligations_length(result);
@@ -671,7 +668,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 					g_result,
 					GSI_PEP_CALLOUT_ERROR_AUTHZ,
 					("XACML Decision: %s, but no Obligation received",decision_str(decision)));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(g_result);
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,g_result);
 			return g_result;
 		}
 		// process obligations
@@ -688,17 +685,17 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 					size_t values_l= xacml_attributeassignment_values_length(attr);
 					for (l= 0; l<values_l; l++) {
 						const char * value= xacml_attributeassignment_getvalue(attr,l);
-						GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("XACML Obligation[%s]: %s=%s\n", obligation_id,attr_id,value));
+						GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Obligation[%s]: %s=%s\n", obligation_id,attr_id,value));
 						if (strcmp(XACML_AUTHZINTEROP_OBLIGATION_USERNAME,obligation_id)==0) {
 							if (strcmp(XACML_AUTHZINTEROP_OBLIGATION_ATTR_USERNAME,attr_id)==0) {
-								GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("Username: %s\n",value));
+								GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("Username: %s\n",value));
 								*out_identity= strdup(value);
 								if (*out_identity==NULL) {
 									GSI_PEP_CALLOUT_ERRNO_ERROR(
 											g_result,
 											GSI_PEP_CALLOUT_ERROR_MEMORY,
 											("Failed to duplicate identity: %s",value));
-									GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(g_result);
+									GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,g_result);
 									return g_result;
 								}
 								username_found= GLOBUS_TRUE;
@@ -716,7 +713,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 				("XACML Decision %s, but no Obligation[%s]:AttributeAssigment[%s] found",decision_str(XACML_DECISION_PERMIT),XACML_AUTHZINTEROP_OBLIGATION_USERNAME,XACML_AUTHZINTEROP_OBLIGATION_ATTR_USERNAME));
 	}
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(g_result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,g_result);
 	return g_result;
 }
 
@@ -727,7 +724,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 	static char * _function_name_ = "pep_client_authorize";
 	globus_result_t result= GLOBUS_SUCCESS;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
 
 	// 2. create XACML request
@@ -737,7 +734,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
 				("Mandatory parameter %s missing from file: %s",GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID,gsi_pep_callout_config_getfilename()));
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
 	xacml_request_t * request= NULL;
@@ -746,7 +743,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("Failed to create XACML request"));
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
 
@@ -761,12 +758,12 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 				GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
 				("Failed to authorize XACML request: %s", pep_strerror(pep_rc)));
 		xacml_request_delete(request);
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("ERROR pep_authorize(req,resp): %d\n",pep_rc));
-    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("ERROR pep_authorize(req,resp): %d\n",pep_rc));
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
 
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(5,("call pep_authorize(req,resp): %d\n",pep_rc));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("call pep_authorize(req,resp): %d\n",pep_rc));
 	debug_xacml_request(9,request);
 	debug_xacml_response(9,response);
 
@@ -781,7 +778,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 	xacml_request_delete(request);
 	xacml_response_delete(response);
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 	return result;
 }
 
@@ -793,7 +790,7 @@ static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_res
 	static char * _function_name_ = "xacml_create_request";
 	globus_result_t result= GLOBUS_SUCCESS;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(4);
 
 	*out_request= xacml_request_create();
 	if (*out_request==NULL) {
@@ -801,7 +798,7 @@ static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_res
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Request"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	if (subject!=NULL) {
@@ -817,7 +814,7 @@ static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_res
 		xacml_request_setaction(*out_request,action);
 	}
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
 }
 
@@ -831,14 +828,14 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 	static char * _function_name_ = "xacml_create_subject_certchain";
 	globus_result_t result= GLOBUS_SUCCESS;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(4);
 
 	if (certchain==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("cert chain is NULL"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	// Subject cert-chain
@@ -848,7 +845,7 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Subject"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	xacml_attribute_t * subject_attr_id= xacml_attribute_create(XACML_AUTHZINTEROP_SUBJECT_CERTCHAIN);
@@ -858,14 +855,14 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Subject/Attribute: %s",XACML_AUTHZINTEROP_SUBJECT_CERTCHAIN));
 		xacml_subject_delete(*out_subject);
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	// TODO: error handling
 	xacml_attribute_setdatatype(subject_attr_id,XACML_DATATYPE_BASE64BINARY);
 	xacml_attribute_addvalue(subject_attr_id,certchain);
 	xacml_subject_addattribute(*out_subject,subject_attr_id);
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
 }
 
@@ -879,14 +876,14 @@ static globus_result_t xacml_create_resource_id(const char * resourceid, xacml_r
 	static char * _function_name_ = "xacml_create_resource_id";
 	globus_result_t result= GLOBUS_SUCCESS;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(4);
 
 	if (resourceid==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("resourceid is NULL"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	*out_resource= xacml_resource_create();
@@ -895,7 +892,7 @@ static globus_result_t xacml_create_resource_id(const char * resourceid, xacml_r
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Resource"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	xacml_attribute_t * resource_attr_id= xacml_attribute_create(XACML_RESOURCE_ID);
@@ -905,12 +902,12 @@ static globus_result_t xacml_create_resource_id(const char * resourceid, xacml_r
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Resource/Attribute: %s",XACML_RESOURCE_ID));
 		xacml_resource_delete(*out_resource);
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	xacml_attribute_addvalue(resource_attr_id,resourceid);
 	xacml_resource_addattribute(*out_resource,resource_attr_id);
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
 }
 
@@ -924,14 +921,14 @@ static globus_result_t xacml_create_action_id(const char * actionid, xacml_actio
 	static char * _function_name_ = "xacml_create_action_id";
 	globus_result_t result= GLOBUS_SUCCESS;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(4);
 
 	if (actionid==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("actionid is NULL"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	*out_action= xacml_action_create();
@@ -940,7 +937,7 @@ static globus_result_t xacml_create_action_id(const char * actionid, xacml_actio
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Action"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	xacml_attribute_t * action_attr_id= xacml_attribute_create(XACML_ACTION_ID);
@@ -950,12 +947,12 @@ static globus_result_t xacml_create_action_id(const char * actionid, xacml_actio
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not allocate XACML Action/Attribute: %s",XACML_ACTION_ID));
 		xacml_action_delete(*out_action);
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
 	xacml_attribute_addvalue(action_attr_id,actionid);
 	xacml_action_addattribute(*out_action,action_attr_id);
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
 }
 
@@ -964,7 +961,7 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 	// function name for error macros
 	static char * _function_name_ = "pep_client_create_request";
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(3);
 
 	globus_result_t result= GLOBUS_SUCCESS;
 	xacml_subject_t * subject= NULL;
@@ -976,7 +973,7 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not create XACML Subject: cert-chain"));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
 	if ((result= xacml_create_resource_id(resourceid,&resource)) != GLOBUS_SUCCESS) {
@@ -985,7 +982,7 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 				GSI_PEP_CALLOUT_ERROR_XACML,
 				("can not create XACML Resource: resourceid %s", resourceid));
 		xacml_subject_delete(subject);
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
 	if ((result= xacml_create_action_id(actionid,&action)) != GLOBUS_SUCCESS) {
@@ -995,7 +992,7 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 				("can not create XACML Action: actionid %s", actionid));
 		xacml_subject_delete(subject);
 		xacml_resource_delete(resource);
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
 	if ((result= xacml_create_request(subject,resource,action,out_request)) != GLOBUS_SUCCESS) {
@@ -1006,11 +1003,11 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 		xacml_subject_delete(subject);
 		xacml_resource_delete(resource);
 		xacml_action_delete(action);
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 
 	return result;
 }
@@ -1241,7 +1238,7 @@ static int gsi_pep_callout_activate(void)
     	gsi_pep_callout_debug_fstream= stderr;
     }
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
 
     result= globus_module_activate(GLOBUS_COMMON_MODULE);
     result= globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE);
@@ -1258,7 +1255,7 @@ static int gsi_pep_callout_activate(void)
 				("failed to initialize PEP client: %s", pep_strerror(pep_rc)));
 	}
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
 
     return result;
 }
@@ -1272,7 +1269,7 @@ static int gsi_pep_callout_deactivate(void)
 	static char * _function_name_ = "gsi_pep_callout_deactivate";
 	globus_result_t result= GLOBUS_SUCCESS;
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+    GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
 
 	// release the PEP client
 	pep_error_t pep_rc= pep_destroy();
@@ -1289,7 +1286,7 @@ static int gsi_pep_callout_deactivate(void)
     result= globus_module_deactivate(GLOBUS_GSI_GSSAPI_MODULE);
     result= globus_module_deactivate(GLOBUS_COMMON_MODULE);
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
 
     return result;
 }

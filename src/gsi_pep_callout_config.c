@@ -107,7 +107,11 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
     // function name for error and debug
 	static char * _function_name_ = "gsi_pep_callout_config_read";
 
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(3);
+
 	// open config file
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("filename: %s\n", filename));
+
 	config_file= fopen(filename,"r");
 	if (config_file == NULL) {
 		GSI_PEP_CALLOUT_ERRNO_ERROR(
@@ -157,13 +161,15 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
             goto error_exit;
         }
         int rc= 0;
-        GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("globus_hashtable_insert(%s,%s)\n",kv->key,kv->value));
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("key_value(%s,%s)\n",kv->key,kv->value));
         if ((rc= globus_hashtable_insert(&config_hashtable, kv->key, kv)) == -1) {
+        	// already exists, try to link new with existing
         	keyvalue_t * existing_kv= globus_hashtable_lookup(&config_hashtable,kv->key);
         	if (existing_kv) {
         		while (existing_kv->next) {
         			existing_kv= existing_kv->next;
         		}
+                GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("key: %s have multiple value: %s\n",kv->key,kv->value));
         		existing_kv->next= kv;
         	}
         	else {
@@ -186,6 +192,9 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
 error_exit:
 	// close file
     if (config_file) fclose(config_file);
+
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
+
 	return result;
 }
 
@@ -204,7 +213,7 @@ const char * gsi_pep_callout_config_getvalue(const char *key) {
 		return kv->value;
 	}
 	else {
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("key: %s NOT FOUND\n", key));
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("key: %s NOT FOUND\n", key));
 		return NULL;
 	}
 }
@@ -248,23 +257,23 @@ static int determine_config_filename(void) {
 	FILE * fd;
 	char * home_filename= NULL;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     // file buffer with 0
 	memset(&config_filename,0,CONFIG_FILENAME_LENGTH + 1);
 	// 1. try environment variable
 	char * env_filename= globus_module_getenv(GSI_PEP_CALLOUT_CONFIG_GETENV);
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("getenv: %s=%s\n",GSI_PEP_CALLOUT_CONFIG_GETENV,env_filename));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("getenv: %s=%s\n",GSI_PEP_CALLOUT_CONFIG_GETENV,env_filename));
 	if (env_filename!=NULL && strlen(env_filename)>0) {
 		if ((fd= fopen(env_filename,"r")) != NULL) {
 			fclose(fd);
 			strncpy(config_filename,env_filename,CONFIG_FILENAME_LENGTH);
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("from env: %s\n",config_filename));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("from env: %s\n",config_filename));
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 			return rc;
 		}
 		else {
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("env=%s doesn't exist\n",env_filename));
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env=%s doesn't exist\n",env_filename));
 		}
 	}
 	else {
@@ -277,7 +286,7 @@ static int determine_config_filename(void) {
 		home_filename= calloc(CONFIG_FILENAME_LENGTH + 1,sizeof(char));
 		if (home_filename==NULL) {
 			rc = -1;
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 			return rc;
 		}
 		strncpy(home_filename,home,CONFIG_FILENAME_LENGTH);
@@ -287,13 +296,13 @@ static int determine_config_filename(void) {
 			count= count - strlen(home_filename);
 		}
 		strncat(home_filename,GSI_PEP_CALLOUT_CONFIG_DEFAULT_USER_FILE,count);
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("user file: %s\n",home_filename));
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("user file: %s\n",home_filename));
 
 		if ((fd= fopen(home_filename,"r")) != NULL) {
 			fclose(fd);
 			strncpy(config_filename,home_filename,CONFIG_FILENAME_LENGTH);
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("from user file: %s\n",config_filename));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("from user file: %s\n",config_filename));
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 			return rc;
 		}
 		else {
@@ -303,9 +312,9 @@ static int determine_config_filename(void) {
 
 	// 3. use default
 	strncpy(config_filename,GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE,CONFIG_FILENAME_LENGTH);
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(1,("default: %s\n",config_filename));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("default: %s\n",config_filename));
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 	return rc;
 
 }
@@ -322,7 +331,7 @@ static int gsi_pep_callout_config_activate(void)
 
 	int rc= 0;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     rc= globus_module_activate(GLOBUS_COMMON_MODULE);
     rc= globus_module_activate(GSI_PEP_CALLOUT_ERROR_MODULE);
@@ -336,7 +345,7 @@ static int gsi_pep_callout_config_activate(void)
 				result,
 				GSI_PEP_CALLOUT_ERROR_HASHTABLE,
 				("can not create configuration hashtable: %d", rc));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
     }
 
@@ -346,11 +355,11 @@ static int gsi_pep_callout_config_activate(void)
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
 				("can not determine configuration filename: %d", rc));
-		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(result);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
     }
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
     return rc;
 }
 
@@ -361,7 +370,7 @@ static int gsi_pep_callout_config_deactivate(void) {
     // function name for error
 	static char * _function_name_ = "gsi_pep_callout_config_deactivate";
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
 	int rc= 0;
 	// release the config hashtable
@@ -369,7 +378,7 @@ static int gsi_pep_callout_config_deactivate(void) {
 
     rc= globus_module_deactivate(GSI_PEP_CALLOUT_ERROR_MODULE);
     rc= globus_module_deactivate(GLOBUS_COMMON_MODULE);
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 	return rc;
 }
 

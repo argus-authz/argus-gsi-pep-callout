@@ -88,12 +88,12 @@ static int gsi_pep_callout_error_activate(void) {
     // function name for error
 	static char * _function_name_ = "gsi_pep_callout_error_activate";
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     rc= globus_module_activate(GLOBUS_COMMON_MODULE);
     rc= globus_module_activate(GLOBUS_GSI_OPENSSL_ERROR_MODULE);
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 	return rc;
 }
 
@@ -105,12 +105,12 @@ static int gsi_pep_callout_error_deactivate(void) {
 	static char * _function_name_ = "gsi_pep_callout_error_deactivate";
 	int rc= 0;
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN;
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     rc= globus_module_deactivate(GLOBUS_GSI_OPENSSL_ERROR_MODULE);
     rc= globus_module_deactivate(GLOBUS_COMMON_MODULE);
 
-    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(rc);
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
     return rc;
 }
 

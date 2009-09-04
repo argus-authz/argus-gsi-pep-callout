@@ -57,15 +57,15 @@ extern FILE * gsi_pep_callout_debug_fstream;
 	}                                                           \
 }
 
-#define GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN \
+#define GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(_LEVEL_) \
 	GSI_PEP_CALLOUT_DEBUG_FPRINTF( \
-			1, (gsi_pep_callout_debug_fstream, \
-					"DEBUG1:%s: begin\n", _function_name_))
+			_LEVEL_, (gsi_pep_callout_debug_fstream, \
+					"DEBUG%d:%s: start\n", _LEVEL_, _function_name_))
 
-#define GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(_RC_) \
+#define GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(_LEVEL_, _RC_) \
 	GSI_PEP_CALLOUT_DEBUG_FPRINTF( \
-			1, (gsi_pep_callout_debug_fstream, \
-					"DEBUG1:%s: return %d\n",_function_name_,(int)_RC_))
+			_LEVEL_, (gsi_pep_callout_debug_fstream, \
+					"DEBUG%d:%s: end: %d\n",_LEVEL_,_function_name_,(int)_RC_))
 
 
 /**

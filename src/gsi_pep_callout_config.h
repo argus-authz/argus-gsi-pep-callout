@@ -48,8 +48,8 @@ extern "C" {
 /**
  * XACML message config key constants
  */
-#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID "xacml_resourceid"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID "xacml_actionid"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID 		"xacml_resourceid"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID 			"xacml_actionid"
 
 /**
  * Globus module descriptor
