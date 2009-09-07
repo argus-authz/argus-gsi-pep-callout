@@ -45,12 +45,12 @@ if test "$GCC" = "yes"; then
     CFLAGS="$CFLAGS -Wall "
 fi
 # OSX CFLAGS
-#case $host in
-#*-*-darwin*)
-#    AC_MSG_NOTICE([Mac OSX ($host_os): building for i386 and x86_64 architectures])
-#    CFLAGS="$CFLAGS -arch i386 -arch x86_64 "
-#    ;;
-#esac
+case $host in
+*-*-darwin*)
+    AC_MSG_NOTICE([Mac OSX ($host_os): building for i386 32 bits architecture])
+    CFLAGS="$CFLAGS -arch i386 -m32 "
+    ;;
+esac
 
 # Check glite location
 AC_GLITE
