@@ -200,8 +200,9 @@ error_exit:
 
 /**
  * Returns the value associated with the given key.
+ * If the key is not found, the default value is returned.
  */
-const char * gsi_pep_callout_config_getvalue(const char *key) {
+const char * gsi_pep_callout_config_getvalue(const char * key, const char * default_value) {
     // function name for error and debug
 	static char * _function_name_ = "gsi_pep_callout_config_getvalue";
 
@@ -213,8 +214,8 @@ const char * gsi_pep_callout_config_getvalue(const char *key) {
 		return kv->value;
 	}
 	else {
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("key: %s NOT FOUND\n", key));
-		return NULL;
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("key: %s NOT FOUND, return default: %s\n",key,default_value));
+		return default_value;
 	}
 }
 

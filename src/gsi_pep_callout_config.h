@@ -82,9 +82,9 @@ globus_result_t gsi_pep_callout_config_read(const char *filename);
 
 /**
  * Returns the first configuration value for the given key.
- * NULL if not found.
+ * Returns default_value if the key is not found.
  */
-const char * gsi_pep_callout_config_getvalue(const char *key);
+const char * gsi_pep_callout_config_getvalue(const char *key, const char *default_value);
 
 /**
  * Returns the configuration <key,value,next> pair for the given key.
