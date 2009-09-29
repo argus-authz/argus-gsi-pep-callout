@@ -1,0 +1,10 @@
+README
+------
+This is the GSI PEP Callout module for the Globus Authorization Callouts framework.
+
+Globus Authorization Callouts documentation: http://www.globus.org/toolkit/security/callouts/
+
+GSI PEP Callout documentation: https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSI
+
+--
+$Id$

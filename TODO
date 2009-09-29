@@ -1,0 +1,10 @@
+TODO list
+---------
+* add man page gsi-pep-callout(8) and gsi-pep-callout.conf(8)
+* implements configuration directives:
+  - pep_log_level
+  - pep_log_file
+  - xacml_actionid (overwrite subject)
+
+--
+$Id$
