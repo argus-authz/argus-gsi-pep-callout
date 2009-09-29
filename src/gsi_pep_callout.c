@@ -94,6 +94,13 @@ static int debug_xacml_response(int debug_level, const xacml_response_t * respon
  *        - The length of the above mentioned buffer. This parameter is of type
  *          unsigned int.
  *
+ * It would be like to call: 
+ *          authz_pep_callout(gss_ctx_id_t context,
+ *                            char *       service,
+ *                            char *       desired_identity,
+ *                            char *       identity_buffer,
+ *                            unsigned int identity_buffer_length);
+ *
  * @return
  *        GLOBUS_SUCCESS upon success
  *        A globus result structure upon failure (needs to be defined better)
