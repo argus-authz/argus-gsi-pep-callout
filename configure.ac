@@ -6,9 +6,10 @@
 ##
 # when updating version also update VERSION_* variables (here below)
 ##
-AC_INIT([glite-authz-gsi-pep-callout], [1.0.0], [grid@switch.ch])
+AC_INIT([glite-authz-gsi-pep-callout], [1.0.1], [grid@switch.ch])
 
 AC_CONFIG_AUX_DIR(project)
+AC_CONFIG_MACRO_DIR(project)
 
 ##
 # version numbers
@@ -44,26 +45,19 @@ AC_PROG_LN_S
 if test "$GCC" = "yes"; then
     CFLAGS="$CFLAGS -Wall "
 fi
-# OSX CFLAGS
-case $host in
-*-*-darwin*)
-    AC_MSG_NOTICE([Mac OSX ($host_os): building for i386 32 bits architecture])
-    CFLAGS="$CFLAGS -arch i386 -m32 "
-    ;;
-esac
 
 # Check glite location
 AC_GLITE
 
 # Checks for glite PEP-C headers and library
 # will automatically add -lpep-c in LDFLAGS
-ac_cppflags_backup=$CPPFLAGS
+ac_cflags_backup=$CFLAGS
 ac_ldflags_backup=$LDFLAGS
-CPPFLAGS="-I$GLITE_LOCATION/include"
-LDFLAGS="-L$GLITE_LOCATION/lib"
+CFLAGS=$GLITE_CFLAGS
+LDFLAGS=$GLITE_LDFLAGS
 AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(can not find libpep-c header pep/pep.h)])
 AC_CHECK_LIB(pep-c,pep_initialize)
-CPPFLAGS=$ac_cppflags_backup
+CFLAGS=$ac_cflags_backup
 LDFLAGS=$ac_ldflags_backup
 
 # Checks for header files.
