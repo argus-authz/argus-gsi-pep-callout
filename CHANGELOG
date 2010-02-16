@@ -1,3 +1,8 @@
+glite-authz-gsi-pep-callout 1.1.0
+---------------------------------
+* Implements XACML Grid WN Authorization Profile v.1.0.
+* Security and source code review recommendations implemented.
+
 glite-authz-gsi-pep-callout 1.0.0
 ---------------------------------
-* initial release of the gridftp GSI PEP callout plugin.
+* Initial release of the gridftp GSI PEP callout plugin.
