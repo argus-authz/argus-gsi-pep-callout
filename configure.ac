@@ -4,9 +4,8 @@
 # $Id: configure.ac 1194 2009-06-19 12:54:48Z vtschopp $
 #
 ##
-# when updating version also update VERSION_* variables (here below)
-##
-AC_INIT([glite-authz-gsi-pep-callout], [1.0.1], [grid@switch.ch])
+# IMPORTANT! When updating version also update VERSION_* variables (here below)
+AC_INIT([glite-authz-gsi-pep-callout], [1.1.0], [grid@switch.ch])
 
 AC_CONFIG_AUX_DIR(project)
 AC_CONFIG_MACRO_DIR(project)
@@ -16,7 +15,7 @@ AC_CONFIG_MACRO_DIR(project)
 # used for version.h.in -> version.h
 ##
 VERSION_MAJOR=1
-VERSION_MINOR=0
+VERSION_MINOR=1
 VERSION_REVISION=0
 # timestamp epoch
 VERSION_TIMESTAMP=esyscmd(perl -e 'print time')
