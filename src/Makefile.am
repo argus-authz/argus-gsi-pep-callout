@@ -41,7 +41,7 @@ libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_CFLAGS = \
 
 # linker flags
 libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_LDFLAGS = \
-    -version-info 0:0:0 \
+    -version-info 0:1:0 \
     $(GLITE_LDFLAGS) \
     $(GLOBUS_NOTHR_LDFLAGS)
 
