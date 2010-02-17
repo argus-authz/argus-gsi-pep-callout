@@ -39,7 +39,7 @@ extern "C" {
 #define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_VALIDATION 		"pep_ssl_validation"
 #define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_CERT 		"pep_ssl_client_cert"
 #define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEY 		"pep_ssl_client_key"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEYPASS 	"pep_ssl_client_keypass"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEYPASS 	"pep_ssl_client_keypasswd"
 #define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CERT 		"pep_ssl_server_cert"
 #define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH 	"pep_ssl_server_capath"
 #define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_LOG_LEVEL 			"pep_log_level"
