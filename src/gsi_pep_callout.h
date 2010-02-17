@@ -78,7 +78,8 @@ extern globus_module_descriptor_t gsi_pep_callout_module;
 /**
  * ARGUS Authorization Service PEP callout function
  *
- * This function provides a authorization/mapping callout to the ARGUS AuthZ Service PEP.
+ * This function provides a authorization/mapping callout to the ARGUS AuthZ Service PEP daemon.
+ * It implements the XACML Grid Worker Node Authorization Profile 1.0, see https://edms.cern.ch/document/1058175
  *
  * @param ap
  *        This function, like all functions using the Globus Callout API, is
@@ -87,7 +88,7 @@ extern globus_module_descriptor_t gsi_pep_callout_module;
  *
  *        - The GSS Security context established during service
  *          invocation. This parameter is of type gss_ctx_id_t.
- *        - The name of the service being invoced. This parameter should be
+ *        - The name of the service being invoked. This parameter should be
  *          passed as a NUL terminated string. If no service string is
  *          available a value of NULL should be passed in its stead. This
  *          parameter is of type char *
