@@ -580,7 +580,7 @@ static globus_result_t pep_client_configure(void) {
 	if (option != NULL) {
 		int timeout= (int)strtol(option,NULL,10);
 		if (timeout>0) {
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_URL=%d\n",timeout));
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_TIMEOUT=%d\n",timeout));
 			if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_TIMEOUT,timeout))!=PEP_OK) {
 				GSI_PEP_CALLOUT_ERROR(
 						result,
@@ -591,8 +591,8 @@ static globus_result_t pep_client_configure(void) {
 			}
 		}
 	}
-	// OPTIONAL: pep_ssl_validation true|false|1|0 (default is false)
-	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_VALIDATION,"false");
+	// OPTIONAL: pep_ssl_validation true|false|1|0 (default is true)
+	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_VALIDATION,GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_VALIDATION);
 	int ssl_validate= 0;
 	if (strncasecmp(option,"true",strlen("true")) == 0 || strncasecmp(option,"1",strlen("1")) == 0) {
 		ssl_validate= 1;
@@ -607,8 +607,9 @@ static globus_result_t pep_client_configure(void) {
 		return result;
 	}
 	// OPTIONAL: pep_ssl_client_cert <filename>
-	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_CERT,NULL);
+	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_CERT,GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_CERT);
 	if (option!=NULL) {
+		// TODO: check file exists
 		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_CLIENT_CERT=%s\n",option));
 		if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_CLIENT_CERT,option))!=PEP_OK) {
 			GSI_PEP_CALLOUT_ERROR(
@@ -619,11 +620,11 @@ static globus_result_t pep_client_configure(void) {
 			return result;
 		}
 	}
-	// TODO: other options
 
 	// OPTIONAL: pep_ssl_client_key <filename>
-	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEY,NULL);
+	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEY,GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_KEY);
 	if (option!=NULL) {
+		// TODO: check file exists
 		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_CLIENT_KEY=%s\n",option));
 		if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_CLIENT_KEY,option))!=PEP_OK) {
 			GSI_PEP_CALLOUT_ERROR(
@@ -634,7 +635,7 @@ static globus_result_t pep_client_configure(void) {
 			return result;
 		}
 	}
-	// OPTIONAL: pep_ssl_client_keypass <key password>
+	// OPTIONAL: pep_ssl_client_keypasswd <key password>
 	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEYPASS,NULL);
 	if (option!=NULL) {
 		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_CLIENT_KEYPASSWORD=%s\n",option));
@@ -643,6 +644,20 @@ static globus_result_t pep_client_configure(void) {
 					result,
 					GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
 					("Failed to set PEP client option %s %s: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEYPASS,option,pep_strerror(pep_rc)));
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
+			return result;
+		}
+	}
+	// OPTIONAL: pep_ssl_server_capath <directory>
+	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH,GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_SERVER_CAPATH);
+	if (option!=NULL) {
+		// TODO: check directory exists
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_SERVER_CAPATH=%s\n",option));
+		if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_SERVER_CAPATH,option))!=PEP_OK) {
+			GSI_PEP_CALLOUT_ERROR(
+					result,
+					GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
+					("Failed to set PEP client option %s %s: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH,option,pep_strerror(pep_rc)));
 			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 			return result;
 		}
@@ -656,19 +671,6 @@ static globus_result_t pep_client_configure(void) {
 					result,
 					GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
 					("Failed to set PEP client option %s %s: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CERT,option,pep_strerror(pep_rc)));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
-			return result;
-		}
-	}
-	// OPTIONAL: pep_ssl_server_capath <directory>
-	option= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH,NULL);
-	if (option!=NULL) {
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_SERVER_CAPATH=%s\n",option));
-		if ((pep_rc= pep_setoption(PEP_OPTION_ENDPOINT_SERVER_CAPATH,option))!=PEP_OK) {
-			GSI_PEP_CALLOUT_ERROR(
-					result,
-					GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
-					("Failed to set PEP client option %s %s: %s",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH,option,pep_strerror(pep_rc)));
 			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 			return result;
 		}

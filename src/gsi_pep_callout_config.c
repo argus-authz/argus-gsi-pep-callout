@@ -256,8 +256,7 @@ const char * gsi_pep_callout_config_getfilename(void) {
 
 /**
  * 1. environment variable GSI_PEP_CALLOUT_CONF
- * 2. user file $HOME/.gsi-pep-callout.conf
- * 3. /etc/grid-security/gsi-pep-callout.conf
+ * 2. /etc/grid-security/gsi-pep-callout.conf
  */
 static int determine_config_filename(void) {
     // function name for error and debug
