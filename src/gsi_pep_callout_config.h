@@ -30,7 +30,6 @@ extern "C" {
 //
 #define GSI_PEP_CALLOUT_CONFIG_GETENV 				"GSI_PEP_CALLOUT_CONF"
 #define GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE 		"/etc/grid-security/gsi-pep-callout.conf"
-#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_USER_FILE 	".gsi-pep-callout.conf"
 
 /**
  *  PEP client config key constants

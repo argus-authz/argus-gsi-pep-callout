@@ -18,6 +18,7 @@
  */
 
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "gsi_pep_callout.h"
 #include "gsi_pep_callout_error.h"
@@ -66,7 +67,7 @@ static keyvalue_t * keyvalue_alloc(const char *key, const char * value) {
     }
     char * kv_value= strdup(value);
     if (kv_value==NULL) {
-    	free(kv->key);
+    	free(kv_key);
     	free(kv);
     	return NULL;
     }
@@ -137,6 +138,14 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
         index = 0;
         while (buffer[index] == '\t' || buffer[index] == ' ') {
             index++;
+            // boundary check
+            if (index > 1024) {
+                GSI_PEP_CALLOUT_ERROR(
+                    result,
+                    GSI_PEP_CALLOUT_ERROR_CONFIG,
+                    ("file %s: line %d too long",filename,line_num));
+                goto error_exit;
+            }
         }
 
         /* if blank line continue */
@@ -239,8 +248,7 @@ const keyvalue_t * gsi_pep_callout_config_getkeyvalue(const char *key) {
  * Returns the configuration filename to use:
  *
  * 1. Environment variable GSI_PEP_CALLOUT_CONF value if env set and file exists
- * 2. User file $HOME/.gsi-pep-callout.conf if file exists
- * 3. Default file /etc/grid-security/gsi-pep-callout.conf
+ * 2. Default file /etc/grid-security/gsi-pep-callout.conf
  */
 const char * gsi_pep_callout_config_getfilename(void) {
 	return config_filename;
@@ -256,63 +264,34 @@ static int determine_config_filename(void) {
 	static char * _function_name_ = "determine_config_filename";
 
 	int rc= 0;
-	FILE * fd;
-	char * home_filename= NULL;
+	int stat_rc= 0;
+	struct stat stat_buffer;
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     // file buffer with 0
 	memset(&config_filename,0,CONFIG_FILENAME_LENGTH + 1);
-	// 1. try environment variable
+
+	// 1. try environment variable GSI_PEP_CALLOUT_CONF
 	char * env_filename= globus_module_getenv(GSI_PEP_CALLOUT_CONFIG_GETENV);
 	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("getenv: %s=%s\n",GSI_PEP_CALLOUT_CONFIG_GETENV,env_filename));
 	if (env_filename!=NULL && strlen(env_filename)>0) {
-		if ((fd= fopen(env_filename,"r")) != NULL) {
-			fclose(fd);
+		if ((stat_rc= stat(env_filename,&stat_buffer)) == 0) {
+			// file exists
 			strncpy(config_filename,env_filename,CONFIG_FILENAME_LENGTH);
 			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("from env: %s\n",config_filename));
 			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 			return rc;
 		}
 		else {
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env=%s doesn't exist\n",env_filename));
+			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env=%s doesn't exist: %d\n",env_filename,stat_rc));
 		}
 	}
 	else {
 		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env var %s not set\n",GSI_PEP_CALLOUT_CONFIG_GETENV));
 	}
 
-	// 2. try user home
-	char * home = globus_module_getenv("HOME");
-	if (home!=NULL && strlen(home)>0) {
-		home_filename= calloc(CONFIG_FILENAME_LENGTH + 1,sizeof(char));
-		if (home_filename==NULL) {
-			rc = -1;
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
-			return rc;
-		}
-		strncpy(home_filename,home,CONFIG_FILENAME_LENGTH);
-		size_t count= CONFIG_FILENAME_LENGTH - strlen(home_filename);
-		if (home_filename[strlen(home_filename)-1] != '/') {
-			strncat(home_filename,"/",count);
-			count= count - strlen(home_filename);
-		}
-		strncat(home_filename,GSI_PEP_CALLOUT_CONFIG_DEFAULT_USER_FILE,count);
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("user file: %s\n",home_filename));
-
-		if ((fd= fopen(home_filename,"r")) != NULL) {
-			fclose(fd);
-			strncpy(config_filename,home_filename,CONFIG_FILENAME_LENGTH);
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("from user file: %s\n",config_filename));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
-			return rc;
-		}
-		else {
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("user file %s doesn't exist\n",home_filename));
-		}
-	}
-
-	// 3. use default
+	// or use default /etc/grid-security/gsi-pep-callout.conf
 	strncpy(config_filename,GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE,CONFIG_FILENAME_LENGTH);
 	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("default: %s\n",config_filename));
 
