@@ -48,7 +48,7 @@ extern globus_module_descriptor_t gsi_pep_callout_error_module;
 /**
  * GSI PEP Callout Error codes
  *
- * TODO: number the error types -> fill the message table
+ * number the error types -> fill the message table
  */
 typedef enum
 {
