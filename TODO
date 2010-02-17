@@ -4,7 +4,5 @@ TODO list
 * implements configuration directives:
   - pep_log_level
   - pep_log_file
-  - xacml_actionid (overwrite subject)
-
 --
 $Id$
