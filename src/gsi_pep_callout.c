@@ -22,6 +22,8 @@
 #include <globus_gsi_credential.h>
 
 #include <pep/pep.h>
+#include <pep/profiles.h>
+#include <pep/xacml.h>
 
 #include <stdlib.h>
 
@@ -72,7 +74,7 @@ static int debug_xacml_response(int debug_level, const xacml_response_t * respon
 /**
  * ARGUS AuthZ Service PEP Callout Function
  *
- * This function provides a authorization/mapping callout to the ARGUS AuthZ Service PEP.
+ * This function provides a authorization/mapping callout to the ARGUS AuthZ Service PEP daemon.
  *
  * @param ap
  *        This function, like all functions using the Globus Callout API, is
@@ -160,6 +162,13 @@ globus_result_t authz_pep_callout(va_list ap)
 
     // extract credentials  (X509 or proxy) from context
     gss_cred_id_t cred = get_gss_cred_id(gss_context);
+    if (cred == NULL) {
+    	GSI_PEP_CALLOUT_ERROR(
+            result,
+            GSI_PEP_CALLOUT_ERROR_GSSAPI,
+            ("GSS context does not contain GSS credentials"));
+        goto error;
+    }
     if ((result= gss_cred_extract_cert(cred, &x509)) != GLOBUS_SUCCESS) {
     	GSI_PEP_CALLOUT_ERROR(
             result,
@@ -306,7 +315,6 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
 		return result;
 	}
 
-	// TODO: error handling
 	*peer_name= (char *)peer_name_buffer.value;
 
 	gss_release_name(&minor_status,&peer);
@@ -321,7 +329,12 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
  */
 static gss_cred_id_t get_gss_cred_id(const gss_ctx_id_t gss_context)
 {
-    return (gss_cred_id_t)gss_context->peer_cred_handle;
+	if (gss_context==NULL) {
+		return NULL;
+	}
+	else {
+		return (gss_cred_id_t)gss_context->peer_cred_handle;
+	}
 }
 
 /**
@@ -888,7 +901,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 /**
  * Creates a XACML Request with a Subject, a Resource and a Action.
  */
-static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_resource_t * resource, xacml_action_t * action, xacml_request_t ** out_request) {
+static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_resource_t * resource, xacml_action_t * action, xacml_environment_t * environment, xacml_request_t ** out_request) {
     // function name for error macros
 	static char * _function_name_ = "xacml_create_request";
 	globus_result_t result= GLOBUS_SUCCESS;
@@ -904,17 +917,41 @@ static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_res
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
-	if (subject!=NULL) {
-		// TODO: error handling
-		xacml_request_addsubject(*out_request,subject);
+	if (subject!=NULL && xacml_request_addsubject(*out_request,subject) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Subject to Request"));
+		xacml_request_delete(*out_request);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
 	}
-	if (resource!=NULL) {
-		// TODO: error handling
-		xacml_request_addresource(*out_request,resource);
+	if (resource!=NULL && xacml_request_addresource(*out_request,resource)!=PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Resource to Request"));
+		xacml_request_delete(*out_request);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
 	}
-	if (action!=NULL) {
-		// TODO: error handling
-		xacml_request_setaction(*out_request,action);
+	if (action!=NULL && xacml_request_setaction(*out_request,action)!=PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Action to Request"));
+		xacml_request_delete(*out_request);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	if (environment!=NULL && xacml_request_setenvironment(*out_request,environment) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Environment to Request"));
+		xacml_request_delete(*out_request);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
 	}
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
@@ -922,13 +959,13 @@ static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_res
 }
 
 /**
- * Creates a XACML Subject cert-chain
+ * Creates a XACML Subject key-info (XACML Grid WN AuthZ Profile 1.0)
  * @param certchain the PEM blocks of the certificate chain
  * @return pointer to the XACML Subject created or @c NULL on error.
  */
-static globus_result_t xacml_create_subject_certchain(const char * certchain, xacml_subject_t ** out_subject ) {
+static globus_result_t xacml_create_subject_keyinfo(const char * certchain, xacml_subject_t ** out_subject ) {
     // function name for error macros
-	static char * _function_name_ = "xacml_create_subject_certchain";
+	static char * _function_name_ = "xacml_create_subject_keyinfo";
 	globus_result_t result= GLOBUS_SUCCESS;
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(4);
@@ -941,7 +978,7 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
-	// Subject cert-chain
+	// XACML Subject
 	*out_subject= xacml_subject_create();
 	if (*out_subject==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
@@ -951,20 +988,38 @@ static globus_result_t xacml_create_subject_certchain(const char * certchain, xa
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
-	xacml_attribute_t * subject_attr_id= xacml_attribute_create(XACML_AUTHZINTEROP_SUBJECT_CERTCHAIN);
+	// Subject key-info
+	xacml_attribute_t * subject_attr_id= xacml_attribute_create(XACML_SUBJECT_KEY_INFO);
 	if (subject_attr_id==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
-				("can not allocate XACML Subject/Attribute: %s",XACML_AUTHZINTEROP_SUBJECT_CERTCHAIN));
+				("can not allocate XACML Subject/Attribute: %s",XACML_SUBJECT_KEY_INFO));
 		xacml_subject_delete(*out_subject);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
-	// TODO: error handling
-	xacml_attribute_setdatatype(subject_attr_id,XACML_DATATYPE_BASE64BINARY);
-	xacml_attribute_addvalue(subject_attr_id,certchain);
-	xacml_subject_addattribute(*out_subject,subject_attr_id);
+	xacml_attribute_setdatatype(subject_attr_id,XACML_DATATYPE_STRING);
+	if (xacml_attribute_addvalue(subject_attr_id,certchain) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Subject/Attribute[%s] value: %s",XACML_SUBJECT_KEY_INFO,certchain));
+		xacml_attribute_delete(subject_attr_id);
+		xacml_subject_delete(*out_subject);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	if (xacml_subject_addattribute(*out_subject,subject_attr_id) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Attribute[%s] to Subject",XACML_SUBJECT_KEY_INFO));
+		xacml_attribute_delete(subject_attr_id);
+		xacml_subject_delete(*out_subject);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
 }
@@ -1008,16 +1063,35 @@ static globus_result_t xacml_create_resource_id(const char * resourceid, xacml_r
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
-	xacml_attribute_addvalue(resource_attr_id,resourceid);
-	xacml_resource_addattribute(*out_resource,resource_attr_id);
+	if (xacml_attribute_addvalue(resource_attr_id,resourceid) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Resource/Attribute[%s] value: %s",XACML_RESOURCE_ID,resourceid));
+		xacml_attribute_delete(resource_attr_id);
+		xacml_resource_delete(*out_resource);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	if (xacml_resource_addattribute(*out_resource,resource_attr_id) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Attribute[%s] to Resource",XACML_RESOURCE_ID));
+		xacml_attribute_delete(resource_attr_id);
+		xacml_resource_delete(*out_resource);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
 }
 
 /**
  * Create a XACML Action with action-id Attribute.
- * @param actionid The Action identifier
- * @return pointer to the XACML Action created or @c NULL on error.
+ * @param actionid The action-id value
+ * @param out_action pointer to the XACML Action created or @c NULL on error
+ * @return GLOBUS_SUCCESS or an error
  */
 static globus_result_t xacml_create_action_id(const char * actionid, xacml_action_t ** out_action ) {
     // function name for error macros
@@ -1053,10 +1127,84 @@ static globus_result_t xacml_create_action_id(const char * actionid, xacml_actio
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 		return result;
 	}
-	xacml_attribute_addvalue(action_attr_id,actionid);
-	xacml_action_addattribute(*out_action,action_attr_id);
+	if (xacml_attribute_addvalue(action_attr_id,actionid) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Action/Attribute[%s] value: %s",XACML_ACTION_ID,actionid));
+		xacml_attribute_delete(action_attr_id);
+		xacml_action_delete(*out_action);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	if (xacml_action_addattribute(*out_action,action_attr_id) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+					result,
+					GSI_PEP_CALLOUT_ERROR_XACML,
+					("can not add XACML Attribute[%s] to Action",XACML_ACTION_ID));
+			xacml_attribute_delete(action_attr_id);
+			xacml_action_delete(*out_action);
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+			return result;
+	}
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
 	return result;
+}
+
+/**
+ * Create a XACML Environment with the XACML Grid WN AuthZ Profile ID attribute.
+ * @param out_environment pointer to the XACML Environment created or @c NULL on error
+ * @return GLOBUS_SUCCESS or an error
+ */
+static globus_result_t xacml_create_environment_profile_id(xacml_environment_t ** out_environment) {
+    // function name for error macros
+	static char * _function_name_ = "xacml_create_environment_profile_id";
+	globus_result_t result= GLOBUS_SUCCESS;
+
+	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(4);
+
+	*out_environment= xacml_environment_create();
+	if (*out_environment==NULL) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not allocate XACML Environment"));
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	xacml_attribute_t * profile_attr_id= xacml_attribute_create(XACML_GRIDWN_ATTRIBUTE_PROFILE_ID);
+	if (profile_attr_id==NULL) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not allocate XACML Environment/Attribute: %s",XACML_GRIDWN_ATTRIBUTE_PROFILE_ID));
+		xacml_environment_delete(*out_environment);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	if (xacml_attribute_addvalue(profile_attr_id,XACML_GRIDWN_PROFILE_VERSION) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not add XACML Environment/Attribute[%s] value: %s",XACML_GRIDWN_ATTRIBUTE_PROFILE_ID,XACML_GRIDWN_PROFILE_VERSION));
+		xacml_attribute_delete(profile_attr_id);
+		xacml_environment_delete(*out_environment);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+		return result;
+	}
+	if (xacml_environment_addattribute(*out_environment,profile_attr_id) != PEP_XACML_OK) {
+		GSI_PEP_CALLOUT_ERROR(
+					result,
+					GSI_PEP_CALLOUT_ERROR_XACML,
+					("can not add XACML Attribute[%s] to Environment",XACML_GRIDWN_ATTRIBUTE_PROFILE_ID));
+			xacml_attribute_delete(profile_attr_id);
+			xacml_environment_delete(*out_environment);
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+			return result;
+	}
+	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(4,result);
+	return result;
+
 }
 
 static globus_result_t pep_client_create_request(const char * cert_chain, const char * resourceid, const char * actionid, xacml_request_t ** out_request)
@@ -1070,12 +1218,13 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 	xacml_subject_t * subject= NULL;
 	xacml_resource_t * resource= NULL;
 	xacml_action_t * action= NULL;
+	xacml_environment_t * environment= NULL;
 
-	if ((result= xacml_create_subject_certchain(cert_chain,&subject)) != GLOBUS_SUCCESS) {
+	if ((result= xacml_create_subject_keyinfo(cert_chain,&subject)) != GLOBUS_SUCCESS) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
-				("can not create XACML Subject: cert-chain"));
+				("can not create XACML Subject for certificate chain"));
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
@@ -1083,7 +1232,7 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
-				("can not create XACML Resource: resourceid %s", resourceid));
+				("can not create XACML Resource for resourceid: %s", resourceid));
 		xacml_subject_delete(subject);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
@@ -1092,13 +1241,25 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
-				("can not create XACML Action: actionid %s", actionid));
+				("can not create XACML Action for actionid: %s", actionid));
 		xacml_subject_delete(subject);
 		xacml_resource_delete(resource);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
-	if ((result= xacml_create_request(subject,resource,action,out_request)) != GLOBUS_SUCCESS) {
+	if ((result= xacml_create_environment_profile_id(&environment)) != GLOBUS_SUCCESS) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_XACML,
+				("can not create XACML Environment for profile ID"));
+		xacml_subject_delete(subject);
+		xacml_resource_delete(resource);
+		xacml_action_delete(action);
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
+		return result;
+
+	}
+	if ((result= xacml_create_request(subject,resource,action,environment,out_request)) != GLOBUS_SUCCESS) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_XACML,
@@ -1106,6 +1267,7 @@ static globus_result_t pep_client_create_request(const char * cert_chain, const 
 		xacml_subject_delete(subject);
 		xacml_resource_delete(resource);
 		xacml_action_delete(action);
+		xacml_environment_delete(environment);
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,result);
 		return result;
 	}
