@@ -52,6 +52,14 @@ extern "C" {
 #define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID 			"xacml_actionid"
 
 /**
+ * GSI PEP Callout default configuration values
+ */
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_VALIDATION	"true"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_SERVER_CAPATH "/etc/grid-security/certificates"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_CERT	"/etc/grid-security/hostcert.pem"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_KEY	"/etc/grid-security/hostkey.pem"
+
+/**
  * Globus module descriptor
  */
 #define GSI_PEP_CALLOUT_CONFIG_MODULE (&gsi_pep_callout_config_module)
