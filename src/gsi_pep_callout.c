@@ -732,6 +732,10 @@ static const char * decision_str(const xacml_decision_t decision) {
 
 /**
  * Parses the XACML response and extract the identity to map.
+ * Implements XACML Grid WN AuthZ Profile 1.0
+ * @param repsonse the XACML response to parse
+ * @param out_identity pointer to the username received or NULL
+ * @return GLOBUS_SUCCESS if obligation and username is found, or an error.
  */
 static globus_result_t pep_client_parse_response(const xacml_response_t * response, char ** out_identity) {
 	static char * _function_name_ = "pep_client_parse_response";
@@ -794,16 +798,17 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 			xacml_fulfillon_t fulfillon= xacml_obligation_getfulfillon(obligation);
 			if (fulfillon == decision) {
 				const char * obligation_id= xacml_obligation_getid(obligation);
-				size_t attrs_l= xacml_obligation_attributeassignments_length(obligation);
-				for (k= 0; k<attrs_l; k++) {
-					xacml_attributeassignment_t * attr= xacml_obligation_getattributeassignment(obligation,k);
-					const char * attr_id= xacml_attributeassignment_getid(attr);
-					size_t values_l= xacml_attributeassignment_values_length(attr);
-					for (l= 0; l<values_l; l++) {
-						const char * value= xacml_attributeassignment_getvalue(attr,l);
-						GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Obligation[%s]: %s=%s\n", obligation_id,attr_id,value));
-						if (strcmp(XACML_AUTHZINTEROP_OBLIGATION_USERNAME,obligation_id)==0) {
-							if (strcmp(XACML_AUTHZINTEROP_OBLIGATION_ATTR_USERNAME,attr_id)==0) {
+				GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Obligation[%s]\n", obligation_id));
+				if (strcmp(XACML_GRIDWN_OBLIGATION_LOCAL_ENVIRONMENT_MAP_POSIX,obligation_id)==0) {
+					size_t attrs_l= xacml_obligation_attributeassignments_length(obligation);
+					for (k= 0; k<attrs_l; k++) {
+						xacml_attributeassignment_t * attr= xacml_obligation_getattributeassignment(obligation,k);
+						const char * attr_id= xacml_attributeassignment_getid(attr);
+						size_t values_l= xacml_attributeassignment_values_length(attr);
+						for (l= 0; l<values_l; l++) {
+							const char * value= xacml_attributeassignment_getvalue(attr,l);
+							GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Obligation[%s]: %s=%s\n", obligation_id,attr_id,value));
+							if (strcmp(XACML_GRIDWN_ATTRIBUTE_USER_ID,attr_id)==0) {
 								GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("Username: %s\n",value));
 								*out_identity= strdup(value);
 								if (*out_identity==NULL) {
@@ -826,7 +831,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 		GSI_PEP_CALLOUT_ERROR(
 				g_result,
 				GSI_PEP_CALLOUT_ERROR_AUTHZ,
-				("XACML Decision %s, but no Obligation[%s]:AttributeAssigment[%s] found",decision_str(XACML_DECISION_PERMIT),XACML_AUTHZINTEROP_OBLIGATION_USERNAME,XACML_AUTHZINTEROP_OBLIGATION_ATTR_USERNAME));
+				("XACML Decision %s, but no Obligation[%s]/AttributeAssigment[%s] found",decision_str(XACML_DECISION_PERMIT),XACML_GRIDWN_OBLIGATION_LOCAL_ENVIRONMENT_MAP_POSIX,XACML_GRIDWN_ATTRIBUTE_USER_ID));
 	}
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(3,g_result);
@@ -879,7 +884,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 		return result;
 	}
 
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("call pep_authorize(req,resp): %d\n",pep_rc));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("pep_authorize(req,resp): %d\n",pep_rc));
 	debug_xacml_request(9,request);
 	debug_xacml_response(9,response);
 
@@ -899,7 +904,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 }
 
 /**
- * Creates a XACML Request with a Subject, a Resource and a Action.
+ * Creates a XACML Request with a Subject, a Resource, a Action and a Environment.
  */
 static globus_result_t xacml_create_request(xacml_subject_t * subject, xacml_resource_t * resource, xacml_action_t * action, xacml_environment_t * environment, xacml_request_t ** out_request) {
     // function name for error macros
