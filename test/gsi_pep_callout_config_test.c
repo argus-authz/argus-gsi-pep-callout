@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 
 
 	rc = globus_module_activate(GSI_PEP_CALLOUT_CONFIG_MODULE);
-	printf("activate GSI_PEP_CALLOUT_CONFIG_MODULE: %d\n",rc);
+	printf("activated GSI_PEP_CALLOUT_CONFIG_MODULE: %d\n",rc);
 
 	const char * filename= gsi_pep_callout_config_getfilename();
 	printf("config: %s\n",filename);
@@ -32,32 +32,43 @@ int main(int argc, char **argv) {
 	}
 
 	#define MYKEY "key1"
-	const char * param= gsi_pep_callout_config_getvalue(MYKEY);
+	const char * param= gsi_pep_callout_config_getvalue(MYKEY,NULL);
 	if (param) {
-		printf("config[%s]: %s\n", MYKEY, param);
+		printf("config[%s]: %s=%s\n", filename,MYKEY, param);
 	}
 	else {
-		printf("ERROR: no value found for key: %s\n",MYKEY);
+		printf("OK: no value found for key: %s\n",MYKEY);
 	}
 
-	#define PEPD_URL "pepd_url"
-	const keyvalue_t * kv= gsi_pep_callout_config_getkeyvalue(PEPD_URL);
+	const keyvalue_t * kv;
+	kv= gsi_pep_callout_config_getkeyvalue(GSI_PEP_CALLOUT_CONFIG_KEY_PEP_URL);
 	if (kv) {
-		printf("config[%s]: %s\n", kv->key, kv->value);
+		printf("config[%s]: %s=%s\n", filename, kv->key, kv->value);
 		while (kv->next) {
 			kv= kv->next;
-			printf("config[%s]: %s\n", kv->key, kv->value);
+			printf("config[%s]: %s=%s\n", filename, kv->key, kv->value);
 		}
 	}
 	else {
-		printf("ERROR: no keyvalue found for key: %s\n",PEPD_URL);
+		printf("ERROR: no keyvalue found for key: %s\n",GSI_PEP_CALLOUT_CONFIG_KEY_PEP_URL);
 	}
 
+	kv= gsi_pep_callout_config_getkeyvalue(GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID);
+	if (kv) {
+		printf("config[%s]: %s=%s\n", filename, kv->key, kv->value);
+		while (kv->next) {
+			kv= kv->next;
+			printf("config[%s]: %s=%s\n", filename, kv->key, kv->value);
+		}
+	}
+	else {
+		printf("ERROR: no keyvalue found for key: %s\n",GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID);
+	}
 
 error:
 
 	rc = globus_module_deactivate(GSI_PEP_CALLOUT_CONFIG_MODULE);
-	printf("deactivate GSI_PEP_CALLOUT_CONFIG_MODULE: %d\n",rc);
+	printf("deactivated GSI_PEP_CALLOUT_CONFIG_MODULE: %d\n",rc);
 
 	return 0;
 }
