@@ -727,7 +727,7 @@ static const char * decision_str(const xacml_decision_t decision) {
         return "Not Applicable";
         break;
     default:
-        return "ERRRO: Invalid decision";
+        return "ERROR: Invalid decision";
         break;
     }
 }
@@ -843,20 +843,30 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 /**
  *
  */
-static globus_result_t pep_client_authorize(const char *peer_name, const char * cert_chain, const char * actionid, char ** local_identity) {
+static globus_result_t pep_client_authorize(const char *peer_name, const char * cert_chain, const char * service, char ** local_identity) {
 	static char * _function_name_ = "pep_client_authorize";
 	globus_result_t result= GLOBUS_SUCCESS;
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
 
-	// 2. create XACML request
+	// create XACML request
 	const char * resourceid= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID,NULL);
 	if (resourceid==NULL) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
 				("Mandatory parameter %s missing from file: %s",GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID,gsi_pep_callout_config_getfilename()));
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
+		return result;
+	}
+	// check for xacml_actionid in config file, if not defined, use the service arg
+	const char * actionid= gsi_pep_callout_config_getvalue(GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID,service);
+	if (actionid==NULL) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_CONFIG,
+				("Argument service is NULL, and parameter %s not defined in file: %s",GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID,gsi_pep_callout_config_getfilename()));
     	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
