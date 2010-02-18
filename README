@@ -1,10 +1,20 @@
 README
 ------
-This is the GSI PEP Callout module for the Globus Authorization Callouts framework.
+This is the Argus Authorization Service GSI PEP Callout module for the 
+Globus Authorization Callouts framework.
 
-Globus Authorization Callouts documentation: http://www.globus.org/toolkit/security/callouts/
+Argus Authorization Services documentation:
+    https://twiki.cern.ch/twiki/bin/view/EGEE/AuthorizationFramework
 
-GSI PEP Callout documentation: https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSI
+Globus Authorization Callouts documentation: 
+    http://www.globus.org/toolkit/security/callouts/
+
+GSI PEP Callout documentation: 
+
+    https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSIInfo
+    https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSIInstall
+    https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSIConfig
+    https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSITroubleshooting
 
 --
 $Id$
