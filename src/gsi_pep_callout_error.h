@@ -37,8 +37,6 @@ extern "C" {
 #include <globus_error_gssapi.h> /* globus_error_wrap_gssapi_error */
 #include <globus_error_openssl.h> /* globus_error_wrap_openssl_error */
 
-// TODO: update doc for PEP-C
-
 /**
  * Module descriptor
  */
