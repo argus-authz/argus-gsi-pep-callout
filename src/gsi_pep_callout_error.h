@@ -65,34 +65,59 @@ typedef enum
     GSI_PEP_CALLOUT_ERROR_LAST_NOT_USED,
 }
 gsi_pep_callout_error_t;
-
 extern char * gsi_pep_callout_error_strings[];
+
+/**
+ * Logging facility
+ */
+void log_error(const char * format, ...);
+void log_info(const char * format, ...);
+void log_debug(const char * format, ...);
+void log_set_enabled(int enabled);
+int log_is_enabled(void);
 
 /**
  * ERROR MACROS
  */
-#define GSI_PEP_CALLOUT_ERROR(__RESULT, __TYPE, __ERRSTR)                \
+#define GSI_PEP_CALLOUT_ERROR_LOG(_ERRORTYPE_, _ERRORSTR_) \
+{      \
+	char * _tmp_str_= globus_common_create_string _ERRORSTR_;    \
+	log_error( \
+		"%s: %s%s%s%s",  \
+		_function_name_,                                             \
+		gsi_pep_callout_error_strings[_ERRORTYPE_], \
+        _tmp_str_ ? ": " : "",                                       \
+        _tmp_str_ ? _tmp_str_ : "", "\n");                                \
+	globus_libc_free(_tmp_str_);                             \
+}
+
+
+#define GSI_PEP_CALLOUT_ERROR(_RESULT_, _ERRORTYPE_, _ERRORSTR_)                \
 {                                                                        \
-    char * _tmp_str_ = globus_common_create_string __ERRSTR;             \
-    __RESULT = globus_error_put(                                         \
+    char * _tmp_str_ = globus_common_create_string _ERRORSTR_;             \
+    _RESULT_= globus_error_put(                                                    \
         globus_error_construct_error(                                    \
             GSI_PEP_CALLOUT_ERROR_MODULE,                                \
-            (__RESULT) ? globus_error_get(__RESULT) : NULL,              \
-            __TYPE,                                                      \
+            (_RESULT_) ? globus_error_get(_RESULT_) : NULL,              \
+            _ERRORTYPE_,                                                      \
             __FILE__,                                                    \
 			_function_name_,                                             \
             __LINE__,                                                    \
             "%s%s%s",                                                    \
-            gsi_pep_callout_error_strings[__TYPE],                       \
+            gsi_pep_callout_error_strings[_ERRORTYPE_],                       \
             _tmp_str_ ? ": " : "",                                       \
             _tmp_str_ ? _tmp_str_ : ""));                                \
     globus_libc_free(_tmp_str_);                                         \
+    if (_RESULT_ == GLOBUS_SUCCESS) { \
+    	GSI_PEP_CALLOUT_ERROR_LOG(_ERRORTYPE_,_ERRORSTR_); \
+    	_RESULT_ = GLOBUS_FAILURE; \
+    } \
 }
 
 #define GSI_PEP_CALLOUT_ERRNO_ERROR(_RESULT_, _ERRORTYPE_, _ERRORSTR_)   \
 {                                                                        \
 	char *  _tmp_str_ = globus_common_create_string _ERRORSTR_;          \
-	_RESULT_ = globus_error_put(                                         \
+	_RESULT_= globus_error_put(                                                    \
 		globus_error_wrap_errno_error(                                   \
 			GSI_PEP_CALLOUT_ERROR_MODULE,                                \
 			errno,                                                       \
@@ -103,12 +128,16 @@ extern char * gsi_pep_callout_error_strings[];
 			"%s",                                                        \
 			_tmp_str_));                                                 \
 	globus_libc_free(_tmp_str_);                                         \
+    if (_RESULT_ == GLOBUS_SUCCESS) { \
+    	GSI_PEP_CALLOUT_ERROR_LOG(_ERRORTYPE_,_ERRORSTR_); \
+    	_RESULT_ = GLOBUS_FAILURE; \
+    } \
 }
 
 #define GSI_PEP_CALLOUT_OPENSSL_ERROR(_RESULT_, _ERRORTYPE_, _ERRORSTR_)   \
 {                                                                        \
 	char *  _tmp_str_ = globus_common_create_string _ERRORSTR_;          \
-	_RESULT_ = globus_error_put(                                         \
+	_RESULT_= globus_error_put(                                                    \
 		globus_error_wrap_openssl_error(                                 \
 			GSI_PEP_CALLOUT_ERROR_MODULE,                                \
 			_ERRORTYPE_,                                                 \
@@ -118,9 +147,15 @@ extern char * gsi_pep_callout_error_strings[];
 			"%s",                                                        \
 			_tmp_str_));                                                 \
 	globus_libc_free(_tmp_str_);                                         \
+    if (_RESULT_ == GLOBUS_SUCCESS) { \
+    	GSI_PEP_CALLOUT_ERROR_LOG(_ERRORTYPE_,_ERRORSTR_); \
+    	_RESULT_ = GLOBUS_FAILURE; \
+    } \
 }
-#define GSI_PEP_CALLOUT_GSS_ERROR(__RESULT, __MAJOR_STATUS, __MINOR_STATUS) \
-    __RESULT = globus_error_put(                                                   \
+
+#define GSI_PEP_CALLOUT_GSS_ERROR(_RESULT_, __MAJOR_STATUS, __MINOR_STATUS) \
+{ \
+	_RESULT_ = globus_error_put(                                                       \
         globus_error_wrap_gssapi_error(                                            \
             GSI_PEP_CALLOUT_ERROR_MODULE,                                   \
             __MAJOR_STATUS,                                                        \
@@ -130,7 +165,12 @@ extern char * gsi_pep_callout_error_strings[];
 			_function_name_,                                             \
             __LINE__,                                                              \
             "%s",                                                                  \
-            gsi_pep_callout_error_strings[GSI_PEP_CALLOUT_ERROR_GSSAPI]))
+            gsi_pep_callout_error_strings[GSI_PEP_CALLOUT_ERROR_GSSAPI])); \
+    if (_RESULT_ == GLOBUS_SUCCESS) { \
+    	GSI_PEP_CALLOUT_ERROR_LOG(GSI_PEP_CALLOUT_ERROR_GSSAPI,("GSS error")); \
+        _RESULT_ = GLOBUS_FAILURE; \
+    } \
+}
 
 #ifdef  __cplusplus
 }
