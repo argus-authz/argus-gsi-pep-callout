@@ -1,4 +1,5 @@
 #include <globus_common.h>
+#include "gsi_pep_callout.h"
 #include "gsi_pep_callout_config.h"
 #include <stdio.h>
 
@@ -9,21 +10,19 @@ int main(int argc, char **argv) {
 	char key[256];
 	char value[256];
 
-	if ((rc= sscanf("key = value","%s=%s",key,value)) < 2) {
-		printf("ERROR: scanf: %d\n",rc);
+	result= globus_module_activate(GSI_PEP_CALLOUT_MODULE);
+	if (result!=GLOBUS_SUCCESS) {
+		globus_object_t *error= globus_error_get(result);
+		char * error_string= globus_error_print_chain(error);
+		printf("GLOBUS ERROR: %s",error_string);
+		goto error;
 	}
-	if ((rc= sscanf("key value","%s %s",key,value)) < 2) {
-		printf("ERROR: scanf: %d\n",rc);
-	}
-
-
-	rc = globus_module_activate(GSI_PEP_CALLOUT_CONFIG_MODULE);
-	printf("activated GSI_PEP_CALLOUT_CONFIG_MODULE: %d\n",rc);
+	printf("activated GSI_PEP_CALLOUT_MODULE: %d\n",result);
 
 	const char * filename= gsi_pep_callout_config_getfilename();
 	printf("config: %s\n",filename);
 
-	result= gsi_pep_callout_config_read(filename);
+	result= gsi_pep_callout_config_load();
 	if (result!=GLOBUS_SUCCESS) {
 		globus_object_t *error= globus_error_get(result);
 		char * error_string= globus_error_print_chain(error);
@@ -67,8 +66,8 @@ int main(int argc, char **argv) {
 
 error:
 
-	rc = globus_module_deactivate(GSI_PEP_CALLOUT_CONFIG_MODULE);
-	printf("deactivated GSI_PEP_CALLOUT_CONFIG_MODULE: %d\n",rc);
+	rc = globus_module_deactivate(GSI_PEP_CALLOUT_MODULE);
+	printf("deactivated GSI_PEP_CALLOUT_MODULE: %d\n",rc);
 
 	return 0;
 }
