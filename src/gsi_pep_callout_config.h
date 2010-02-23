@@ -79,14 +79,14 @@ typedef struct keyvalue_s {
 //
 
 /**
- * Returns the configuration filename
+ * Returns the configuration filename determined at module activation
  */
 const char * gsi_pep_callout_config_getfilename(void);
 
 /**
- * Reads the configuration from given filename
+ * Load the configuration
  */
-globus_result_t gsi_pep_callout_config_read(const char *filename);
+globus_result_t gsi_pep_callout_config_load(void);
 
 /**
  * Returns the first configuration value for the given key.
