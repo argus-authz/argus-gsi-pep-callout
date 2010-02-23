@@ -250,9 +250,9 @@ globus_result_t authz_pep_callout(va_list ap)
 	    		2 /* level */,
 				("%s mapped to %s\n",
 				peer_name, identity_buffer));
+	    log_info("User %s mapped to %s",peer_name,identity_buffer);
 	}
 	free(local_identity);
-
 
 
 error:
