@@ -118,7 +118,8 @@ globus_result_t authz_pep_callout(va_list ap)
     unsigned int                        identity_buffer_l;
 
     // internal variables
-    char * local_identity;
+    char * peer_name= NULL;
+    char * local_identity= NULL;
     globus_result_t result = GLOBUS_SUCCESS;
     X509 * x509= NULL;
     STACK_OF(X509) * chain= NULL;
@@ -127,8 +128,17 @@ globus_result_t authz_pep_callout(va_list ap)
     // function name for error macros
 	static char * _function_name_ = "authz_pep_callout";
 
+	log_info("%s called",_function_name_);
+
     // active module
-    globus_module_activate(GSI_PEP_CALLOUT_MODULE);
+    result= globus_module_activate(GSI_PEP_CALLOUT_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+    	GSI_PEP_CALLOUT_ERROR(
+            result,
+            GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+            ("Module GSI_PEP_CALLOUT_MODULE activation failed"));
+        goto error;
+    }
 
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
 
@@ -147,12 +157,12 @@ globus_result_t authz_pep_callout(va_list ap)
             ("requested identity: %s\n",desired_identity == NULL ? "NULL" : desired_identity));
 
     // extract peer_name from context
-    char *peer_name= NULL;
     if ((result= gss_ctx_extract_peer_name(gss_context,&peer_name))!=GLOBUS_SUCCESS) {
     	GSI_PEP_CALLOUT_ERROR(
             result,
             GSI_PEP_CALLOUT_ERROR_GSSAPI,
             ("Can not extract peer name from GSS context"));
+
         goto error;
     }
 
@@ -248,6 +258,18 @@ globus_result_t authz_pep_callout(va_list ap)
 error:
 	if (peer_name) free(peer_name);
 	if (cert_chain) free(cert_chain);
+
+	//XXX
+	log_debug("%s: result=%d",_function_name_,result);
+	if (result!=GLOBUS_SUCCESS) {
+		globus_object_t *error= globus_error_get(result);
+		if (error) {
+			char * error_string= globus_error_print_chain(error);
+			if (error_string) {
+				log_error("%s: %s", _function_name_, error_string);
+			}
+		}
+	}
 
 	globus_module_deactivate(GSI_PEP_CALLOUT_MODULE);
 
@@ -543,7 +565,7 @@ static globus_result_t pep_client_configure(void) {
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
 	const char * config= gsi_pep_callout_config_getfilename();
-	if ((result= gsi_pep_callout_config_read(config))!=GLOBUS_SUCCESS) {
+	if ((result= gsi_pep_callout_config_load())!=GLOBUS_SUCCESS) {
 		GSI_PEP_CALLOUT_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
@@ -745,7 +767,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 	globus_bool_t username_found= GLOBUS_FALSE;
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(3);
-
+	*out_identity= NULL;
 	int i= 0;
 	size_t results_l= xacml_response_results_length(response);
 	if (results_l <= 0) {
@@ -891,7 +913,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
 				GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
 				("Failed to authorize XACML request: %s", pep_strerror(pep_rc)));
 		xacml_request_delete(request);
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("ERROR pep_authorize(req,resp): %d\n",pep_rc));
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("ERROR pep_authorize(req,resp): %s\n",pep_strerror(pep_rc)));
     	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
 	}
@@ -1500,6 +1522,9 @@ static int gsi_pep_callout_activate(void)
 	static char * _function_name_ = "gsi_pep_callout_activate";
 	globus_result_t result= GLOBUS_SUCCESS;
 
+	//
+	// DEBUG variables
+	//
     char * tmp_string = globus_module_getenv("GSI_PEP_CALLOUT_DEBUG_LEVEL");
     if(tmp_string != GLOBUS_NULL)
     {
@@ -1522,11 +1547,56 @@ static int gsi_pep_callout_activate(void)
 
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
 
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GLOBUS_COMMON_MODULE\n"));
     result= globus_module_activate(GLOBUS_COMMON_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+				("failed to activate module: GLOBUS_COMMON_MODULE"));
+	    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+		return result;
+    }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GLOBUS_GSI_GSSAPI_MODULE\n"));
     result= globus_module_activate(GLOBUS_GSI_GSSAPI_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+				("failed to activate module: GLOBUS_GSI_GSSAPI_MODULE"));
+	    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+		return result;
+    }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GLOBUS_GSI_CREDENTIAL_MODULE\n"));
     result= globus_module_activate(GLOBUS_GSI_CREDENTIAL_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+				("failed to activate module: GLOBUS_GSI_CREDENTIAL_MODULE"));
+	    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+		return result;
+    }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GSI_PEP_CALLOUT_ERROR_MODULE\n"));
     result= globus_module_activate(GSI_PEP_CALLOUT_ERROR_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+				("failed to activate module: GSI_PEP_CALLOUT_ERROR_MODULE"));
+	    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+		return result;
+    }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GSI_PEP_CALLOUT_CONFIG_MODULE\n"));
     result= globus_module_activate(GSI_PEP_CALLOUT_CONFIG_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+		GSI_PEP_CALLOUT_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+				("failed to activate module: GSI_PEP_CALLOUT_CONFIG_MODULE"));
+	    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+		return result;
+    }
 
     // initialize the PEP client
     pep_error_t pep_rc= pep_initialize();
@@ -1538,7 +1608,6 @@ static int gsi_pep_callout_activate(void)
 	}
 
     GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
-
     return result;
 }
 
@@ -1572,4 +1641,3 @@ static int gsi_pep_callout_deactivate(void)
 
     return result;
 }
-
