@@ -18,7 +18,7 @@
  */
 
 #include <stdlib.h>
-#include <sys/stat.h>
+#include <unistd.h>
 
 #include "gsi_pep_callout.h"
 #include "gsi_pep_callout_error.h"
@@ -48,9 +48,9 @@ globus_module_descriptor_t gsi_pep_callout_config_module =
  * Hashtable for PEP-C config params
  */
 #define CONFIG_HASHTABLE_SIZE 32
-globus_hashtable_t config_hashtable;
+static globus_hashtable_t config_hashtable;
 #define CONFIG_FILENAME_LENGTH 1024
-char config_filename[CONFIG_FILENAME_LENGTH + 1];
+static char config_filename[CONFIG_FILENAME_LENGTH + 1];
 
 /**
  * Creates a key value pair.
@@ -96,7 +96,7 @@ static void keyvalue_free(keyvalue_t * kv) {
  * Reads and parses the given config file. Populate the configuration hashtable
  * with the key,value pairs.
  */
-globus_result_t gsi_pep_callout_config_read(const char *filename)
+globus_result_t gsi_pep_callout_config_load(void)
 {
 	globus_result_t result= GLOBUS_SUCCESS;
 	FILE * config_file;
@@ -107,19 +107,19 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
     int index;
 
     // function name for error and debug
-	static char * _function_name_ = "gsi_pep_callout_config_read";
+	static char * _function_name_ = "gsi_pep_callout_config_load";
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(3);
 
 	// open config file
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("filename: %s\n", filename));
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("filename: %s\n", config_filename));
 
-	config_file= fopen(filename,"r");
+	config_file= fopen(config_filename,"r");
 	if (config_file == NULL) {
 		GSI_PEP_CALLOUT_ERRNO_ERROR(
             result,
             GSI_PEP_CALLOUT_ERROR_CONFIG,
-            ("Configuration file %s", filename));
+            ("Configuration file %s", config_filename));
         goto error_exit;
 	}
 
@@ -128,6 +128,7 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
     while(fgets(buffer,1024,config_file))
     {
     	line_num++;
+    	GSI_PEP_CALLOUT_DEBUG_PRINTF(9,("file[%d]: %s\n", line_num,buffer));
         /* strip any comments */
         pound = strchr(buffer, '#');
         if(pound != NULL) {
@@ -143,10 +144,11 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
                 GSI_PEP_CALLOUT_ERROR(
                     result,
                     GSI_PEP_CALLOUT_ERROR_CONFIG,
-                    ("file %s: line %d too long",filename,line_num));
+                    ("file %s: line %d too long",config_filename,line_num));
                 goto error_exit;
             }
         }
+    	//GSI_PEP_CALLOUT_DEBUG_PRINTF(9,("index: %d\n", index));
 
         /* if blank line continue */
         if (buffer[index] == '\0' || buffer[index] == '\n') {
@@ -157,7 +159,7 @@ globus_result_t gsi_pep_callout_config_read(const char *filename)
             GSI_PEP_CALLOUT_ERROR(
                 result,
                 GSI_PEP_CALLOUT_ERROR_CONFIG,
-                ("file %s: line %d malformed: %s", filename,line_num, &buffer[index]));
+                ("file %s: line %d malformed: %s", config_filename,line_num, &buffer[index]));
             goto error_exit;
         }
 
@@ -255,50 +257,6 @@ const char * gsi_pep_callout_config_getfilename(void) {
 }
 
 /**
- * 1. environment variable GSI_PEP_CALLOUT_CONF
- * 2. /etc/grid-security/gsi-pep-callout.conf
- */
-static int determine_config_filename(void) {
-    // function name for error and debug
-	static char * _function_name_ = "determine_config_filename";
-
-	int rc= 0;
-	int stat_rc= 0;
-	struct stat stat_buffer;
-
-	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
-
-    // file buffer with 0
-	memset(&config_filename,0,CONFIG_FILENAME_LENGTH + 1);
-
-	// 1. try environment variable GSI_PEP_CALLOUT_CONF
-	char * env_filename= globus_module_getenv(GSI_PEP_CALLOUT_CONFIG_GETENV);
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("getenv: %s=%s\n",GSI_PEP_CALLOUT_CONFIG_GETENV,env_filename));
-	if (env_filename!=NULL && strlen(env_filename)>0) {
-		if ((stat_rc= stat(env_filename,&stat_buffer)) == 0) {
-			// file exists
-			strncpy(config_filename,env_filename,CONFIG_FILENAME_LENGTH);
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("from env: %s\n",config_filename));
-			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
-			return rc;
-		}
-		else {
-			GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env=%s doesn't exist: %d\n",env_filename,stat_rc));
-		}
-	}
-	else {
-		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env var %s not set\n",GSI_PEP_CALLOUT_CONFIG_GETENV));
-	}
-
-	// or use default /etc/grid-security/gsi-pep-callout.conf
-	strncpy(config_filename,GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE,CONFIG_FILENAME_LENGTH);
-	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("default: %s\n",config_filename));
-
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
-	return rc;
-
-}
-/**
  * Module activation:
  * - The internal hashtable is allocated.
  * - The default configuration file is determined.
@@ -308,13 +266,10 @@ static int gsi_pep_callout_config_activate(void)
     // function name for error
 	static char * _function_name_ = "gsi_pep_callout_config_activate";
 	globus_result_t result= GLOBUS_SUCCESS;
-
+	struct stat stat_buffer;
 	int rc= 0;
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
-
-    rc= globus_module_activate(GLOBUS_COMMON_MODULE);
-    rc= globus_module_activate(GSI_PEP_CALLOUT_ERROR_MODULE);
 
     // allocate the config hashtable
     if ((rc= globus_hashtable_init(&config_hashtable,
@@ -330,17 +285,66 @@ static int gsi_pep_callout_config_activate(void)
     }
 
     // determine config filename
-    if ((rc= determine_config_filename()) != 0) {
+    // file buffer with 0
+	memset(&config_filename,0,CONFIG_FILENAME_LENGTH + 1);
+
+	// 1. try environment variable GSI_PEP_CALLOUT_CONF
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("getenv %s\n",GSI_PEP_CALLOUT_CONFIG_GETENV));
+	char * env_filename= globus_module_getenv(GSI_PEP_CALLOUT_CONFIG_GETENV);
+	if (env_filename!=NULL && strlen(env_filename)>0) {
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("%s=%s\n",GSI_PEP_CALLOUT_CONFIG_GETENV,env_filename));
+		// file exists ??
+		if ((rc= stat(env_filename,&stat_buffer)) != 0) {
+			GSI_PEP_CALLOUT_ERRNO_ERROR(
+					result,
+					GSI_PEP_CALLOUT_ERROR_CONFIG,
+					("Configuration GSI_PEP_CALLOUT_CONF=%s does not exist", env_filename));
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
+			return result;
+		}
+		// readable ??
+		if ((rc= access(env_filename,R_OK)) != 0) {
+			GSI_PEP_CALLOUT_ERRNO_ERROR(
+					result,
+					GSI_PEP_CALLOUT_ERROR_CONFIG,
+					("Configuration GSI_PEP_CALLOUT_CONF=%s is not readable", env_filename));
+			GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
+			return result;
+		}
+		// everythink ok
+		strncpy(config_filename,env_filename,CONFIG_FILENAME_LENGTH);
+		GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("using GSI_PEP_CALLOUT_CONF=%s\n",config_filename));
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
+		return result;
+	}
+
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("env var %s not set\n",GSI_PEP_CALLOUT_CONFIG_GETENV));
+
+	// 2. try to use default /etc/grid-security/gsi-pep-callout.conf
+	// exists?
+	if ((rc= stat(GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE,&stat_buffer)) != 0) {
 		GSI_PEP_CALLOUT_ERRNO_ERROR(
 				result,
 				GSI_PEP_CALLOUT_ERROR_CONFIG,
-				("can not determine configuration filename: %d", rc));
+				("Default configuration %s does not exist", GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE));
 		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
 		return result;
-    }
+	}
+	// readable ??
+	if ((rc= access(GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE,R_OK)) != 0) {
+		GSI_PEP_CALLOUT_ERRNO_ERROR(
+				result,
+				GSI_PEP_CALLOUT_ERROR_CONFIG,
+				("Default configuration %s is not readable", GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE));
+		GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
+		return result;
+	}
+	// everythink ok
 
+	strncpy(config_filename,GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE,CONFIG_FILENAME_LENGTH);
+	GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("using default: %s\n",config_filename));
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
-    return rc;
+    return GLOBUS_SUCCESS;
 }
 
 /**
@@ -352,12 +356,10 @@ static int gsi_pep_callout_config_deactivate(void) {
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
-	int rc= 0;
+	int rc= GLOBUS_SUCCESS;
 	// release the config hashtable
     globus_hashtable_destroy_all(&config_hashtable,(globus_hashtable_destructor_func_t)keyvalue_free);
 
-    rc= globus_module_deactivate(GSI_PEP_CALLOUT_ERROR_MODULE);
-    rc= globus_module_deactivate(GLOBUS_COMMON_MODULE);
 	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
 	return rc;
 }
