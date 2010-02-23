@@ -49,6 +49,7 @@ libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_LDFLAGS = \
 # libraries to link with
 libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_LIBADD = \
 	$(GLOBUS_COMMON_NOTHR_LIBS) \
+    $(GLOBUS_GSS_NOTHR_LIBS) \
     $(GLOBUS_GSI_NOTHR_LIBS) 
     
     ## 
