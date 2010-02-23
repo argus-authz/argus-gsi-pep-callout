@@ -25,6 +25,8 @@
  *
  * $Id$
  */
+#include <syslog.h>
+#include <stdarg.h>
 
 #include "gsi_pep_callout.h"
 #include "gsi_pep_callout_error.h"
@@ -44,7 +46,8 @@
  * GSI_PEP_CALLOUT_ERROR_IDENTITY_BUFFER 	= 8,
  * GSI_PEP_CALLOUT_ERROR_AUTHZ 				= 9,
  * GSI_PEP_CALLOUT_ERROR_XACML 				= 10,
- * GSI_PEP_CALLOUT_ERROR_LAST 				= 11
+ * GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION  = 11,
+ * GSI_PEP_CALLOUT_ERROR_LAST_NOT_USED 		= 12
  */
 
 char * gsi_pep_callout_error_strings[GSI_PEP_CALLOUT_ERROR_LAST_NOT_USED] =
@@ -60,6 +63,7 @@ char * gsi_pep_callout_error_strings[GSI_PEP_CALLOUT_ERROR_LAST_NOT_USED] =
 	"Identity buffer error",
 	"Authorization error",
 	"XACML error",
+	"Module activation error",
 };
 
 /**
@@ -81,8 +85,12 @@ globus_module_descriptor_t gsi_pep_callout_error_module =
     &local_version
 };
 
+static int syslog_enabled= 0;
+
 /**
  * Module activation
+ *
+ * Open syslog LOG_LOCAL5 facility
  */
 static int gsi_pep_callout_error_activate(void) {
 	int rc= 0;
@@ -92,10 +100,21 @@ static int gsi_pep_callout_error_activate(void) {
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     rc= globus_module_activate(GLOBUS_COMMON_MODULE);
+    if (rc!=GLOBUS_SUCCESS) {
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
+    	return rc;
+    }
     rc= globus_module_activate(GLOBUS_GSI_OPENSSL_ERROR_MODULE);
+    if (rc!=GLOBUS_SUCCESS) {
+    	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
+    	return rc;
+    }
 
-	GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
-	return rc;
+    // syslog
+    openlog("gsi_pep_callout", LOG_CONS | LOG_NDELAY | LOG_PID, LOG_LOCAL5);
+    syslog_enabled= 1;
+
+    return rc;
 }
 
 /**
@@ -108,10 +127,49 @@ static int gsi_pep_callout_error_deactivate(void) {
 
 	GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
-    rc= globus_module_deactivate(GLOBUS_GSI_OPENSSL_ERROR_MODULE);
-    rc= globus_module_deactivate(GLOBUS_COMMON_MODULE);
+	// syslog
+	closelog();
+
+    globus_module_deactivate(GLOBUS_GSI_OPENSSL_ERROR_MODULE);
+    globus_module_deactivate(GLOBUS_COMMON_MODULE);
 
     GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
     return rc;
 }
 
+static void log_syslog(int prio, const char * format, va_list args) {
+	if (!syslog_enabled) return;
+    vsyslog(prio, format, args);
+}
+
+void log_error(const char * format, ...) {
+	if (!syslog_enabled) return;
+	va_list args;
+    va_start(args, format);
+    log_syslog(LOG_ERR,format,args);
+    va_end(args);
+}
+
+void log_info(const char * format, ...) {
+	if (!syslog_enabled) return;
+	va_list args;
+    va_start(args, format);
+    log_syslog(LOG_INFO,format,args);
+    va_end(args);
+}
+
+void log_debug(const char * format, ...) {
+	if (!syslog_enabled) return;
+	va_list args;
+    va_start(args, format);
+    log_syslog(LOG_DEBUG,format,args);
+    va_end(args);
+}
+
+void log_set_enabled(int enabled) {
+	syslog_enabled= enabled;
+}
+
+int log_is_enabled(void) {
+	return syslog_enabled;
+}
