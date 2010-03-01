@@ -3,6 +3,7 @@
 #
 export GLOBUS_LOCATION=/opt/globus
 
+# config files
 export GSI_AUTHZ_CONF=/opt/globus/gsi-authz.conf
 export GSI_PEP_CALLOUT_CONF=/opt/globus/gsi-pep-callout.conf
 
