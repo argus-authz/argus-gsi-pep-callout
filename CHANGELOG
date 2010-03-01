@@ -1,5 +1,6 @@
 glite-authz-gsi-pep-callout 1.1.0
 ---------------------------------
+* Compatible with Argus 1.1 services.
 * Implements XACML Grid WN Authorization Profile v.1.0.
 * Security and source code review recommendations implemented.
 * xacml_actionid configuration parameter added.
