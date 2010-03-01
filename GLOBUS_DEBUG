@@ -9,6 +9,6 @@ export GSI_PEP_CALLOUT_CONF=/opt/globus/gsi-pep-callout.conf
 export GLOBUS_CALLOUT_DEBUG_LEVEL=5
 export GSI_PEP_CALLOUT_DEBUG_LEVEL=5
 
+# and start gridftp server
 cd $GLOBUS_LOCATION
-
 sbin/globus-gridftp-server -d 255 -p 9999 -debug
