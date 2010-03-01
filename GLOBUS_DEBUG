@@ -7,6 +7,7 @@ export GLOBUS_LOCATION=/opt/globus
 export GSI_AUTHZ_CONF=/opt/globus/gsi-authz.conf
 export GSI_PEP_CALLOUT_CONF=/opt/globus/gsi-pep-callout.conf
 
+# debug level (0-9)
 export GLOBUS_CALLOUT_DEBUG_LEVEL=5
 export GSI_PEP_CALLOUT_DEBUG_LEVEL=5
 
