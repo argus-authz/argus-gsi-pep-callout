@@ -1,3 +1,6 @@
+# 
+# globus debugging example
+#
 export GLOBUS_LOCATION=/opt/globus
 
 export GSI_AUTHZ_CONF=/opt/globus/gsi-authz.conf
