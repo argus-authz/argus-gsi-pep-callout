@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([glite-authz-gsi-pep-callout], [1.1.0], [grid@switch.ch])
+AC_INIT([glite-authz-gsi-pep-callout], [1.1.1], [grid@switch.ch])
 
 AC_CONFIG_AUX_DIR(project)
 AC_CONFIG_MACRO_DIR(project)
