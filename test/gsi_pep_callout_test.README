@@ -1,0 +1,1 @@
+the user cert and private key read from $HOME/.globus/usercert.pem and $HOME/.globus/userkey.pem. the private key *must not* be encrypted (stupid globus).

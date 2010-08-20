@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Members of the EGEE Collaboration.
+ * Copyright (c) Members of the EGEE Collaboration. 2009.
  * See http://www.eu-egee.org/partners for details on the copyright holders.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -250,9 +250,9 @@ globus_result_t authz_pep_callout(va_list ap)
 	    		2 /* level */,
 				("%s mapped to %s\n",
 				peer_name, identity_buffer));
+	    log_info("User %s mapped to %s",peer_name,identity_buffer);
 	}
 	free(local_identity);
-
 
 
 error:
