@@ -20,10 +20,10 @@
 #
 # library to build
 #
-lib_LTLIBRARIES = libgsi_pep_callout_$(GLOBUS_NOTHR_FLAVOR).la
+lib_LTLIBRARIES = libgsi_pep_callout.la
 
 # sources not distributed
-libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_SOURCES = \
+libgsi_pep_callout_la_SOURCES = \
     gssapi_openssl.h \
     globus_gsi_gss_constants.h \
     gsi_pep_callout.h \
@@ -34,25 +34,36 @@ libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_SOURCES = \
     gsi_pep_callout_config.c
 
 # compiler flags
-libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_CFLAGS = \
+libgsi_pep_callout_la_CFLAGS = \
     $(GLITE_CFLAGS) \
-    $(GLOBUS_NOTHR_CFLAGS)
+    $(GLOBUS_EMI_CFLAGS)
+
+    # $(GLOBUS_NOTHR_CFLAGS)
 
 
 # linker flags
-libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_LDFLAGS = \
+libgsi_pep_callout_la_LDFLAGS = \
     -version-info 0:1:0 \
     $(GLITE_LDFLAGS) \
-    $(GLOBUS_NOTHR_LDFLAGS)
+    $(GLOBUS_EMI_LDFLAGS)
+    
+    
+    # $(GLOBUS_NOTHR_LDFLAGS)
 
 
 # libraries to link with
 libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_LIBADD = \
-	$(GLOBUS_COMMON_NOTHR_LIBS) \
-    $(GLOBUS_GSS_NOTHR_LIBS) \
-    $(GLOBUS_GSI_NOTHR_LIBS) 
+    -lglobus_common \
+    -lglobus_gssapi_gsi -lglobus_gssapi_error \
+    -lglobus_gss_assist \
+    -lglobus_gsi_credential
+
+
+#   $(GLOBUS_COMMON_NOTHR_LIBS) \
+#   $(GLOBUS_GSS_NOTHR_LIBS) \
+#   $(GLOBUS_GSI_NOTHR_LIBS) 
     
     ## 
     ## -lglobus_gridmap_callout_error_$(GLOBUS_NOTHR_FLAVOR)
     ## $(GLOBUS_GSS_NOTHR_LIBS) 
-	##
+    ##

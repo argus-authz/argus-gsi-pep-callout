@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([glite-authz-gsi-pep-callout], [1.1.1], [grid@switch.ch])
+AC_INIT([argus-gsi-pep-callout], [1.1.1], [grid@switch.ch])
 
 AC_CONFIG_AUX_DIR(project)
 AC_CONFIG_MACRO_DIR(project)
@@ -30,7 +30,7 @@ AC_CONFIG_MACRO_DIR(project)
 ##
 VERSION_MAJOR=1
 VERSION_MINOR=1
-VERSION_REVISION=0
+VERSION_REVISION=1
 # timestamp epoch
 VERSION_TIMESTAMP=esyscmd(perl -e 'print time')
 AC_SUBST(VERSION_MAJOR)
@@ -83,7 +83,19 @@ AC_TYPE_SIZE_T
 
 
 # Check globus location
-AC_GLOBUS
+#AC_GLOBUS
+
+#
+# EMI globus EPEL HACK
+#
+GLOBUS_EMI_CFLAGS=-I/usr/include/globus
+AC_SUBST(GLOBUS_EMI_CFLAGS)
+AC_MSG_NOTICE([GLOBUS_EMI_CFLAGS= $GLOBUS_EMI_CFLAGS])
+
+#GLOBUS_EMI_LDFLAGS=-L/usr/lib64
+GLOBUS_EMI_LDFLAGS=
+AC_SUBST(GLOBUS_EMI_LDFLAGS)
+AC_MSG_NOTICE([GLOBUS_EMI_LDFLAGS= $GLOBUS_EMI_LDFLAGS])
 
 
 # Checks for library and functions.
