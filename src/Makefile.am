@@ -52,7 +52,7 @@ libgsi_pep_callout_la_LDFLAGS = \
 
 
 # libraries to link with
-libgsi_pep_callout___GLOBUS_NOTHR_FLAVOR__la_LIBADD = \
+libgsi_pep_callout_la_LIBADD = \
     -lglobus_common \
     -lglobus_gssapi_gsi -lglobus_gssapi_error \
     -lglobus_gss_assist \
