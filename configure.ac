@@ -88,6 +88,8 @@ AC_TYPE_SIZE_T
 #
 # EMI globus EPEL HACK
 #
+AC_CHECK_HEADER([globus/globus_common.h],,[AC_MSG_ERROR(can not find header globus/globus_common.h)])
+
 GLOBUS_EMI_CFLAGS=-I/usr/include/globus
 AC_SUBST(GLOBUS_EMI_CFLAGS)
 AC_MSG_NOTICE([GLOBUS_EMI_CFLAGS= $GLOBUS_EMI_CFLAGS])
