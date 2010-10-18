@@ -87,6 +87,10 @@ AC_TYPE_SIZE_T
 
 #
 # EMI globus EPEL HACK
+# set CFLAGS and LDFLAGS:
+#
+# CFLAGS=-I/usr/lib64/include/globus -I/usr/include/globus
+# LDFLAGS=-lglobus_common -lglobus_gssapi_gsi -lglobus_gssapi_error -lglobus_gss_assist -lglobus_gsi_credential
 #
 AC_CHECK_HEADER([globus/globus_common.h],,[AC_MSG_ERROR(can not find header globus/globus_common.h)])
 
