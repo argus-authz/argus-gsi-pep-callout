@@ -62,16 +62,27 @@ fi
 # Check glite location
 AC_GLITE
 
-# Checks for glite PEP-C headers and library
-# will automatically add -lpep-c in LDFLAGS
-ac_cflags_backup=$CFLAGS
-ac_ldflags_backup=$LDFLAGS
-CFLAGS=$GLITE_CFLAGS
-LDFLAGS=$GLITE_LDFLAGS
-AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(can not find libpep-c header pep/pep.h)])
-AC_CHECK_LIB(pep-c,pep_initialize)
-CFLAGS=$ac_cflags_backup
-LDFLAGS=$ac_ldflags_backup
+# Checks for PEP-C headers and library
+#
+# use environment variable PKG_CONFIG_PATH=$libdir/pkgconfig
+#
+PKG_CHECK_MODULES(ARGUS_PEP,[argus-pep],
+    [
+        AC_MSG_NOTICE([ARGUS_PEP_CFLAGS=$ARGUS_PEP_CFLAGS])
+        AC_MSG_NOTICE([ARGUS_PEP_LIBS=$ARGUS_PEP_CFLAGS])
+    ],
+    [
+        CFLAGS="$CFLAGS $GLITE_CFLAGS"
+        AC_MSG_NOTICE([CFLAGS=$CFLAGS])
+        LDFLAGS="$LDFLAGS $GLITE_LDFLAGS"
+        AC_MSG_NOTICE([LDFLAGS=$LDFLAGS])
+        AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(Argus PEP library header pep/pep.h not found)])
+        AC_CHECK_LIB(argus_pep,pep_initialize)
+        AC_CHECK_LIB(argus_pep,pep_version)
+        # PEP-C lib version >= 1.3 
+        AC_CHECK_LIB(argus_pep,xacml_attributeassignment_setvalue)
+    ]
+)
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -81,9 +92,6 @@ AC_CHECK_HEADERS([stdio.h])
 AC_C_CONST
 AC_TYPE_SIZE_T
 
-
-# Check globus location
-#AC_GLOBUS
 
 #
 # EMI globus EPEL HACK
@@ -110,10 +118,6 @@ PKG_CHECK_MODULES(GLOBUS_GSI,
         AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
     ]
 ) 
-
-#AC_MSG_NOTICE([CFLAGS=$CFLAGS])
-#AC_CHECK_HEADER([globus_config.h],,[AC_MSG_ERROR(Globus header globus_config.h not found)])
-#AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
 
 # Checks for library and functions.
 AC_FUNC_REALLOC
