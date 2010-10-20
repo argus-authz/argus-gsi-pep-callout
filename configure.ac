@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([argus-gsi-pep-callout], [1.1.1], [grid@switch.ch])
+AC_INIT([argus-gsi-pep-callout], [1.1.1], [argus-support@cern.ch])
 
 AC_CONFIG_AUX_DIR(project)
 AC_CONFIG_MACRO_DIR(project)
@@ -105,11 +105,14 @@ PKG_CHECK_MODULES(GLOBUS_GSI,
     [
         AC_MSG_NOTICE([GLOBUS_GSI_CFLAGS=$GLOBUS_GSI_CFLAGS])
         AC_MSG_NOTICE([GLOBUS_GSI_LIBS=$GLOBUS_GSI_LIBS])
+        ac_cppflags_backup=$CPPFLAGS
         ac_cflags_backup=$CFLAGS
         ac_ldflags_backup=$LDFLAGS
         CFLAGS=$GLOBUS_GSI_CFLAGS
+        CPPFLAGS=$GLOBUS_GSI_CFLAGS
         LDFLAGS=$GLOBUS_GSI_LIBS
         AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+        CPPFLAGS=$ac_cppflags_backup
         CFLAGS=$ac_cflags_backup
         LDFLAGS=$ac_ldflags_backup
     ], 
