@@ -35,8 +35,8 @@ libgsi_pep_callout_la_SOURCES = \
 
 # compiler flags
 libgsi_pep_callout_la_CFLAGS = \
-    $(GLITE_CFLAGS)
-
+    $(GLITE_CFLAGS) \
+    $(GLOBUS_GSI_CFLAGS)
 
     # $(GLOBUS_NOTHR_CFLAGS)
 
@@ -46,11 +46,13 @@ libgsi_pep_callout_la_LDFLAGS = \
     -version-info 0:2:0 \
     $(GLITE_LDFLAGS)
 
+    # $(GLOBUS_LDFLAGS)
     # $(GLOBUS_NOTHR_LDFLAGS)
 
 
 # libraries to link with
-#libgsi_pep_callout_la_LIBADD = \
+libgsi_pep_callout_la_LIBADD = $(GLOBUS_GSI_LIBS)
+
 #    -lglobus_common \
 #    -lglobus_gssapi_gsi -lglobus_gssapi_error \
 #    -lglobus_gss_assist \

@@ -92,19 +92,28 @@ AC_TYPE_SIZE_T
 # CFLAGS=-I/usr/lib64/include/globus -I/usr/include/globus
 # LDFLAGS=-lglobus_common -lglobus_gssapi_gsi -lglobus_gssapi_error -lglobus_gss_assist -lglobus_gsi_credential
 #
-AC_MSG_NOTICE([globus: CFLAGS=$CFLAGS])
-AC_CHECK_HEADER([globus_config.h],,[AC_MSG_ERROR(Globus header globus_config.h not found)])
-AC_CHECK_HEADER([globus/globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+PKG_CHECK_MODULES(GLOBUS_GSI, 
+    [globus-gssapi-gsi], 
+    [
+        AC_MSG_NOTICE([GLOBUS_GSI_CFLAGS=$GLOBUS_GSI_CFLAGS])
+        AC_MSG_NOTICE([GLOBUS_GSI_LIBS=$GLOBUS_GSI_LIBS])
+        ac_cflags_backup=$CFLAGS
+        ac_ldflags_backup=$LDFLAGS
+        CFLAGS=$GLOBUS_GSI_CFLAGS
+        LDFLAGS=$GLOBUS_GSI_LIBS
+        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+        CFLAGS=$ac_cflags_backup
+        LDFLAGS=$ac_ldflags_backup
+    ], 
+    [
+        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
+        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+    ]
+) 
 
-#GLOBUS_EMI_CFLAGS=-I/usr/include/globus
-#AC_SUBST(GLOBUS_EMI_CFLAGS)
-#AC_MSG_NOTICE([GLOBUS_EMI_CFLAGS= $GLOBUS_EMI_CFLAGS])
-
-#GLOBUS_EMI_LDFLAGS=-L/usr/lib64
-#GLOBUS_EMI_LDFLAGS=
-#AC_SUBST(GLOBUS_EMI_LDFLAGS)
-#AC_MSG_NOTICE([GLOBUS_EMI_LDFLAGS= $GLOBUS_EMI_LDFLAGS])
-
+#AC_MSG_NOTICE([CFLAGS=$CFLAGS])
+#AC_CHECK_HEADER([globus_config.h],,[AC_MSG_ERROR(Globus header globus_config.h not found)])
+#AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
 
 # Checks for library and functions.
 AC_FUNC_REALLOC
