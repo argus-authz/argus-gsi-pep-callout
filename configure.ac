@@ -59,9 +59,6 @@ if test "$GCC" = "yes"; then
     CFLAGS="$CFLAGS -Wall "
 fi
 
-# Check glite location
-AC_GLITE
-
 # Checks for PEP-C headers and library
 #
 # use environment variable PKG_CONFIG_PATH=$libdir/pkgconfig
@@ -72,10 +69,11 @@ PKG_CHECK_MODULES(LIBARGUS_PEP_API,[libargus-pep-api >= 1.3],
         AC_MSG_NOTICE([LIBARGUS_PEP_API_LIBS=$LIBARGUS_PEP_API_LIBS])
     ],
     [
+        AC_GLITE
         CFLAGS="$CFLAGS $GLITE_CFLAGS"
-        AC_MSG_NOTICE([CFLAGS=$CFLAGS])
+        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
         LDFLAGS="$LDFLAGS $GLITE_LDFLAGS"
-        AC_MSG_NOTICE([LDFLAGS=$LDFLAGS])
+        AC_MSG_NOTICE([using LDFLAGS=$LDFLAGS])
         AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(Argus PEP client API header pep/pep.h not found)])
         AC_CHECK_LIB(argus_pep_api,pep_initialize)
         AC_CHECK_LIB(argus_pep_api,pep_version)
