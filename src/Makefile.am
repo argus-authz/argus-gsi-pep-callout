@@ -36,7 +36,7 @@ libgsi_pep_callout_la_SOURCES = \
 # compiler flags
 libgsi_pep_callout_la_CFLAGS = \
     $(GLITE_CFLAGS) \
-    $(LIBARGUS_PEP_API_CFLAGS) \
+    $(LIBPEP_C_CFLAGS) \
     $(GLOBUS_GSI_CFLAGS)
 
 
@@ -48,7 +48,7 @@ libgsi_pep_callout_la_LDFLAGS = \
 
 # libraries to link with
 libgsi_pep_callout_la_LIBADD = \
-    $(LIBARGUS_PEP_API_LIBS) \
+    $(LIBPEP_C_LIBS) \
     $(GLOBUS_GSI_LIBS)
 
 #    -lglobus_common \
