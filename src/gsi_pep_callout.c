@@ -68,7 +68,7 @@ static globus_result_t gss_cred_extract_cert(const gss_cred_id_t gss_cred, X509 
 static globus_result_t gss_cred_extract_cert_chain(const gss_cred_id_t gss_cred,STACK_OF(X509) ** out_chain);
 static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X509) * chain, char ** out_pem);
 static globus_result_t pep_client_configure(void);
-static globus_result_t pep_client_create_request(const char *certchain,const char *resourceid, const char *actionid, xacml_request_t ** out_request);
+static globus_result_t pep_client_create_request(const char *certchain,const char *resourceid, const char *actionid, const char *profileid, xacml_request_t ** out_request);
 static globus_result_t pep_client_authorize(const char *peer, const char * cert_chain, const char * actionid, char ** out_identity);
 
 static int debug_xacml_request(int debug_level, const xacml_request_t * request);
