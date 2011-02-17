@@ -1640,13 +1640,8 @@ static int gsi_pep_callout_deactivate(void)
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
 
     // release the PEP client
-    pep_error_t pep_rc= pep_destroy(pep_handle);
-    if (pep_rc!=PEP_OK) {
-        GSI_PEP_CALLOUT_ERROR(
-                result,
-                GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
-                ("failed to release PEP client: %s", pep_strerror(pep_rc)));
-    }
+    pep_destroy(pep_handle);
+    pep_handle= NULL;
 
     result= globus_module_deactivate(GSI_PEP_CALLOUT_CONFIG_MODULE);
     result= globus_module_deactivate(GSI_PEP_CALLOUT_ERROR_MODULE);
