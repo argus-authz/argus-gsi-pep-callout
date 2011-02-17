@@ -21,7 +21,7 @@
 #include <gssapi.h>
 #include <globus_gsi_credential.h>
 
-#include <pep/pep.h>
+#include <argus/pep.h>
 #include <pep/profiles.h>
 #include <pep/xacml.h>
 

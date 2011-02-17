@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([glite-authz-gsi-pep-callout], [1.1.1], [grid@switch.ch])
+AC_INIT([argus-gsi-pep-callout], [1.1.1], [argus-support@cern.ch])
 
 AC_CONFIG_AUX_DIR(project)
 AC_CONFIG_MACRO_DIR(project)
@@ -30,7 +30,7 @@ AC_CONFIG_MACRO_DIR(project)
 ##
 VERSION_MAJOR=1
 VERSION_MINOR=1
-VERSION_REVISION=0
+VERSION_REVISION=1
 # timestamp epoch
 VERSION_TIMESTAMP=esyscmd(perl -e 'print time')
 AC_SUBST(VERSION_MAJOR)
@@ -59,19 +59,28 @@ if test "$GCC" = "yes"; then
     CFLAGS="$CFLAGS -Wall "
 fi
 
-# Check glite location
-AC_GLITE
-
-# Checks for glite PEP-C headers and library
-# will automatically add -lpep-c in LDFLAGS
-ac_cflags_backup=$CFLAGS
-ac_ldflags_backup=$LDFLAGS
-CFLAGS=$GLITE_CFLAGS
-LDFLAGS=$GLITE_LDFLAGS
-AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(can not find libpep-c header pep/pep.h)])
-AC_CHECK_LIB(pep-c,pep_initialize)
-CFLAGS=$ac_cflags_backup
-LDFLAGS=$ac_ldflags_backup
+# Checks for PEP-C headers and library
+#
+# use environment variable PKG_CONFIG_PATH=$libdir/pkgconfig
+#
+PKG_CHECK_MODULES(LIBPEP_C,[libpep-c >= 1.3],
+    [
+        AC_MSG_NOTICE([LIBPEP_C_CFLAGS=$LIBPEP_C_CFLAGS])
+        AC_MSG_NOTICE([LIBPEP_C_LIBS=$LIBPEP_C_LIBS])
+    ],
+    [
+        AC_GLITE
+        CFLAGS="$CFLAGS $GLITE_CFLAGS"
+        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
+        LDFLAGS="$LDFLAGS $GLITE_LDFLAGS"
+        AC_MSG_NOTICE([using LDFLAGS=$LDFLAGS])
+        AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(Argus PEP client API header pep/pep.h not found)])
+        AC_CHECK_LIB(pep-c,pep_initialize)
+        AC_CHECK_LIB(pep-c,pep_version)
+        # PEP-C lib version >= 1.3 
+        AC_CHECK_LIB(pep-c,xacml_attributeassignment_setvalue)
+    ]
+)
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -82,9 +91,34 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 
 
-# Check globus location
-AC_GLOBUS
-
+#
+# EMI globus EPEL HACK
+# set CFLAGS and LDFLAGS:
+#
+# CFLAGS=-I/usr/lib64/include/globus -I/usr/include/globus
+# LDFLAGS=-lglobus_common -lglobus_gssapi_gsi -lglobus_gssapi_error -lglobus_gss_assist -lglobus_gsi_credential
+#
+PKG_CHECK_MODULES(GLOBUS_GSI, 
+    [globus-gssapi-gsi], 
+    [
+        AC_MSG_NOTICE([GLOBUS_GSI_CFLAGS=$GLOBUS_GSI_CFLAGS])
+        AC_MSG_NOTICE([GLOBUS_GSI_LIBS=$GLOBUS_GSI_LIBS])
+        ac_cppflags_backup=$CPPFLAGS
+        ac_cflags_backup=$CFLAGS
+        ac_ldflags_backup=$LDFLAGS
+        CFLAGS=$GLOBUS_GSI_CFLAGS
+        CPPFLAGS=$GLOBUS_GSI_CFLAGS
+        LDFLAGS=$GLOBUS_GSI_LIBS
+        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+        CPPFLAGS=$ac_cppflags_backup
+        CFLAGS=$ac_cflags_backup
+        LDFLAGS=$ac_ldflags_backup
+    ], 
+    [
+        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
+        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+    ]
+) 
 
 # Checks for library and functions.
 AC_FUNC_REALLOC
