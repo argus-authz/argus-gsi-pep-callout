@@ -30,7 +30,7 @@ doxygen: doc/Doxyfile
 
 html-local: doxygen
 
-# Install doxygen doc in $(prefix)/share/doc/glite-authz-pep-gsi-callout/api
+# Install doxygen doc in $(prefix)/share/doc/argus-pep-gsi-callout/api
 htmldir = $(docdir)/api
 #install-data-local: install-html
 

@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([argus-gsi-pep-callout], [1.1.1], [argus-support@cern.ch])
+AC_INIT([argus-gsi-pep-callout], [1.2.0], [argus-support@cern.ch])
 
 AC_CONFIG_AUX_DIR(project)
 AC_CONFIG_MACRO_DIR(project)
@@ -29,8 +29,8 @@ AC_CONFIG_MACRO_DIR(project)
 # used for version.h.in -> version.h
 ##
 VERSION_MAJOR=1
-VERSION_MINOR=1
-VERSION_REVISION=1
+VERSION_MINOR=2
+VERSION_REVISION=0
 # timestamp epoch
 VERSION_TIMESTAMP=esyscmd(perl -e 'print time')
 AC_SUBST(VERSION_MAJOR)
@@ -59,26 +59,17 @@ if test "$GCC" = "yes"; then
     CFLAGS="$CFLAGS -Wall "
 fi
 
-# Checks for PEP-C headers and library
+# Checks for PEP client API headers and library
 #
 # use environment variable PKG_CONFIG_PATH=$libdir/pkgconfig
 #
-PKG_CHECK_MODULES(LIBPEP_C,[libpep-c >= 1.3],
+PKG_CHECK_MODULES(LIBARGUS_PEP,[libargus-pep >= 2],
     [
-        AC_MSG_NOTICE([LIBPEP_C_CFLAGS=$LIBPEP_C_CFLAGS])
-        AC_MSG_NOTICE([LIBPEP_C_LIBS=$LIBPEP_C_LIBS])
+        AC_MSG_NOTICE([LIBARGUS_PEP_CFLAGS=$LIBARGUS_PEP_CFLAGS])
+        AC_MSG_NOTICE([LIBARGUS_PEP_LIBS=$LIBARGUS_PEP_LIBS])
     ],
     [
-        AC_GLITE
-        CFLAGS="$CFLAGS $GLITE_CFLAGS"
-        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
-        LDFLAGS="$LDFLAGS $GLITE_LDFLAGS"
-        AC_MSG_NOTICE([using LDFLAGS=$LDFLAGS])
-        AC_CHECK_HEADER([pep/pep.h],,[AC_MSG_ERROR(Argus PEP client API header pep/pep.h not found)])
-        AC_CHECK_LIB(pep-c,pep_initialize)
-        AC_CHECK_LIB(pep-c,pep_version)
-        # PEP-C lib version >= 1.3 
-        AC_CHECK_LIB(pep-c,xacml_attributeassignment_setvalue)
+        AC_MSG_ERROR([Argus PEP client API (libargus-pep >= 2) not available. Check the PKG_CONFIG_PATH environment variable.])
     ]
 )
 
@@ -125,7 +116,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([strerror strrchr calloc])
 
 # Sets default prefix
-AC_PREFIX_DEFAULT(/opt/glite)
+AC_PREFIX_DEFAULT(/usr)
 
 AC_CONFIG_SRCDIR(src)
 AM_CONFIG_HEADER(src/config.h)
