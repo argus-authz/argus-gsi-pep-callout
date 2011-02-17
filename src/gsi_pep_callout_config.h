@@ -28,36 +28,37 @@ extern "C" {
 //
 // Config file constants
 //
-#define GSI_PEP_CALLOUT_CONFIG_GETENV 				"GSI_PEP_CALLOUT_CONF"
-#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE 		"/etc/grid-security/gsi-pep-callout.conf"
+#define GSI_PEP_CALLOUT_CONFIG_GETENV               "GSI_PEP_CALLOUT_CONF"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_FILE         "/etc/grid-security/gsi-pep-callout.conf"
 
 /**
  *  PEP client config key constants
  */
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_URL 					"pep_url"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_TIMEOUT 				"pep_timeout"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_VALIDATION 		"pep_ssl_validation"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_CERT 		"pep_ssl_client_cert"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEY 		"pep_ssl_client_key"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEYPASS 	"pep_ssl_client_keypasswd"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CERT 		"pep_ssl_server_cert"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH 	"pep_ssl_server_capath"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_LOG_LEVEL 			"pep_log_level"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_LOG_FILE 			"pep_log_file"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_URL                  "pep_url"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_TIMEOUT              "pep_timeout"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_VALIDATION       "pep_ssl_validation"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_CERT      "pep_ssl_client_cert"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEY       "pep_ssl_client_key"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_CLIENT_KEYPASS   "pep_ssl_client_keypasswd"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CERT      "pep_ssl_server_cert"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_SSL_SERVER_CAPATH    "pep_ssl_server_capath"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_LOG_LEVEL            "pep_log_level"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_PEP_LOG_FILE             "pep_log_file"
 
 /**
  * XACML message config key constants
  */
-#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID 		"xacml_resourceid"
-#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID 			"xacml_actionid"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_RESOURCEID         "xacml_resourceid"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_ACTIONID           "xacml_actionid"
+#define GSI_PEP_CALLOUT_CONFIG_KEY_XACML_PROFILEID          "xacml_profileid"
 
 /**
  * GSI PEP Callout default configuration values
  */
-#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_VALIDATION	"true"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_VALIDATION   "true"
 #define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_SERVER_CAPATH "/etc/grid-security/certificates"
-#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_CERT	"/etc/grid-security/hostcert.pem"
-#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_KEY	"/etc/grid-security/hostkey.pem"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_CERT  "/etc/grid-security/hostcert.pem"
+#define GSI_PEP_CALLOUT_CONFIG_DEFAULT_PEP_SSL_CLIENT_KEY   "/etc/grid-security/hostkey.pem"
 
 /**
  * Globus module descriptor
@@ -69,9 +70,9 @@ extern globus_module_descriptor_t gsi_pep_callout_config_module;
  * <key,value> pair type
  */
 typedef struct keyvalue_s {
-	char * key;
-	char * value;
-	struct keyvalue_s * next;
+    char * key;
+    char * value;
+    struct keyvalue_s * next;
 } keyvalue_t;
 
 //

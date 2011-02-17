@@ -49,24 +49,24 @@ extern FILE * gsi_pep_callout_debug_fstream;
 }
 
 #define GSI_PEP_CALLOUT_DEBUG_PRINTF(_LEVEL_, _MESSAGE_) {      \
-	if (GSI_PEP_CALLOUT_DEBUG(_LEVEL_)) {                       \
-	   char * _msg_str_= globus_common_create_string _MESSAGE_; \
-	   GSI_PEP_CALLOUT_DEBUG_FPRINTF( _LEVEL_, \
-			(gsi_pep_callout_debug_fstream, \
-					"DEBUG%d:%s: %s",_LEVEL_,_function_name_,_msg_str_)) \
-	   globus_libc_free(_msg_str_);                             \
-	}                                                           \
+    if (GSI_PEP_CALLOUT_DEBUG(_LEVEL_)) {                       \
+       char * _msg_str_= globus_common_create_string _MESSAGE_; \
+       GSI_PEP_CALLOUT_DEBUG_FPRINTF( _LEVEL_, \
+            (gsi_pep_callout_debug_fstream, \
+                    "DEBUG%d:%s: %s",_LEVEL_,_function_name_,_msg_str_)) \
+       globus_libc_free(_msg_str_);                             \
+    }                                                           \
 }
 
 #define GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(_LEVEL_) \
-	GSI_PEP_CALLOUT_DEBUG_FPRINTF( \
-			_LEVEL_, (gsi_pep_callout_debug_fstream, \
-					"DEBUG%d:%s: start\n", _LEVEL_, _function_name_))
+    GSI_PEP_CALLOUT_DEBUG_FPRINTF( \
+            _LEVEL_, (gsi_pep_callout_debug_fstream, \
+                    "DEBUG%d:%s: start\n", _LEVEL_, _function_name_))
 
 #define GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(_LEVEL_, _RC_) \
-	GSI_PEP_CALLOUT_DEBUG_FPRINTF( \
-			_LEVEL_, (gsi_pep_callout_debug_fstream, \
-					"DEBUG%d:%s: end: %d\n",_LEVEL_,_function_name_,(int)_RC_))
+    GSI_PEP_CALLOUT_DEBUG_FPRINTF( \
+            _LEVEL_, (gsi_pep_callout_debug_fstream, \
+                    "DEBUG%d:%s: end: %d\n",_LEVEL_,_function_name_,(int)_RC_))
 
 
 /**
