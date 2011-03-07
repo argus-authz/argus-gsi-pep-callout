@@ -21,7 +21,7 @@
 SUBDIRS = src
 EXTRA_DIST = autotools.sh 
 
-docdir = $(datadir)/doc/$(PACKAGE)
+docdir = $(datadir)/doc/$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 doc_DATA = README AUTHORS CHANGELOG COPYRIGHT LICENSE etc/gsi-authz.conf etc/gsi-pep-callout.conf
 
 # Generate doxygen doc
