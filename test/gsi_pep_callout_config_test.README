@@ -1,0 +1,9 @@
+#
+# have the "standard" config files in /etc/grid-security
+#
+# or set
+
+TEST_HOME=`pwd`
+export GSI_AUTHZ_CONF=$TEST_HOME/gsi-authz.conf
+export GSI_PEP_CALLOUT_CONF=$TEST_HOME/gsi-pep-callout.conf
+
