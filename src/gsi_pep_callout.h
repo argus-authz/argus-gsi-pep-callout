@@ -103,7 +103,7 @@ extern globus_module_descriptor_t gsi_pep_callout_module;
  *          unsigned int.
  *
  * It would be like to call: 
- *          authz_pep_callout(gss_ctx_id_t context,
+ *          argus_pep_callout(gss_ctx_id_t context,
  *                            char *       service,
  *                            char *       desired_identity,
  *                            char *       identity_buffer,
@@ -113,7 +113,7 @@ extern globus_module_descriptor_t gsi_pep_callout_module;
  *        GLOBUS_SUCCESS upon success
  *        A globus result structure upon failure (needs to be defined better)
  */
-globus_result_t authz_pep_callout(va_list ap);
+globus_result_t argus_pep_callout(va_list ap);
 
 
 #ifdef  __cplusplus
