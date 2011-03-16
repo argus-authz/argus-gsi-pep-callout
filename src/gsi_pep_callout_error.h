@@ -82,7 +82,7 @@ int log_is_enabled(void);
 #define GSI_PEP_CALLOUT_ERROR_LOG(_ERRORTYPE_, _ERRORSTR_) \
 {      \
 	char * _tmp_str_= globus_common_create_string _ERRORSTR_;    \
-	log_error( \
+	syslog_error( \
 		"%s: %s%s%s%s",  \
 		_function_name_,                                             \
 		gsi_pep_callout_error_strings[_ERRORTYPE_], \
