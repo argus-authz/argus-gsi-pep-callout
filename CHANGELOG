@@ -1,8 +1,12 @@
+argus-gsi-pep-callout 1.2.1
+---------------------------
+* Bug fix: https://savannah.cern.ch/bugs/index.php?79412
+* Bug fix: correctly read the X.509 PEM cert chain.
+
 argus-gsi-pep-callout 1.2.0
 ---------------------------
 * Uses new thread-safe Argus PEP client library (pep-api-c)
 * xacml_profileid configuration parameter added.
-
 
 glite-authz-gsi-pep-callout 1.1.1
 ---------------------------------
