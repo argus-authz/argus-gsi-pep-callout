@@ -35,19 +35,20 @@ libgsi_pep_callout_la_SOURCES = \
 
 # compiler flags
 libgsi_pep_callout_la_CFLAGS = \
-    $(LIBARGUS_PEP_CFLAGS) \
-    $(GLOBUS_GSI_CFLAGS)
-
+    -DDEBUG \
+    -DALLOW_EMPTY_CREDENTIALS \
+    $(GLOBUS_GSI_CFLAGS) \
+    $(LIBARGUS_PEP_CFLAGS) 
 
 # linker flags
 libgsi_pep_callout_la_LDFLAGS = \
-    -version-info 0:3:0
+    -version-info 1:0:0
 
 
 # libraries to link with
 libgsi_pep_callout_la_LIBADD = \
-    $(LIBARGUS_PEP_LIBS) \
-    $(GLOBUS_GSI_LIBS)
+    $(GLOBUS_GSI_LIBS) \
+    $(LIBARGUS_PEP_LIBS) 
 
 #    -lglobus_common \
 #    -lglobus_gssapi_gsi -lglobus_gssapi_error \
