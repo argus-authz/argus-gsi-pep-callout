@@ -1,28 +1,42 @@
-/*
- * Copyright (c) Members of the EGEE Collaboration. 2008.
- * See http://www.eu-egee.org/partners for details on the copyright holders.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+/**
+ * Copyright (c) Members of the EGEE Collaboration. 2004-2010. 
+ * See http://www.eu-egee.org/partners/ for details on the copyright
+ * holders.  
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); 
+ * you may not use this file except in compliance with the License. 
+ * You may obtain a copy of the License at 
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0 
+ * 
+ * Unless required by applicable law or agreed to in writing, software 
+ * distributed under the License is distributed on an "AS IS" BASIS, 
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+ * See the License for the specific language governing permissions and 
  * limitations under the License.
  *
- * Portions of this file Copyright 1999-2005 University of Chicago
- * Portions of this file Copyright 1999-2005 The University of Southern California.
  *
- * This file or a portion of this file is licensed under the
- * terms of the Globus Toolkit Public License, found at
- * http://www.globus.org/toolkit/download/license.html.
- * If you redistribute this file, with or without
- * modifications, you must include this notice in the file.
+ *  Authors:
+ *  2009-
+ *     Oscar Koeroo <okoeroo@nikhef.nl>
+ *     Mischa Sall\'e <msalle@nikhef.nl>
+ *     David Groep <davidg@nikhef.nl>
+ *     NIKHEF Amsterdam, the Netherlands
+ *     <grid-mw-security@nikhef.nl> 
+ *
+ *  2007-2009
+ *     Oscar Koeroo <okoeroo@nikhef.nl>
+ *     David Groep <davidg@nikhef.nl>
+ *     NIKHEF Amsterdam, the Netherlands
+ *
+ *  2003-2007
+ *     Martijn Steenbakkers <martijn@nikhef.nl>
+ *     Oscar Koeroo <okoeroo@nikhef.nl>
+ *     David Groep <davidg@nikhef.nl>
+ *     NIKHEF Amsterdam, the Netherlands
+ *
  */
+
 
 #ifndef GLOBUS_DONT_DOCUMENT_INTERNAL
 /**
@@ -30,8 +44,8 @@
  * @author Sam Lang, Sam Meder
  * 
  * $RCSfile: gssapi_openssl.h,v $
- * $Revision: 1.9 $
- * $Date: 2005/04/15 23:37:18 $
+ * $Revision: 1.2 $
+ * $Date: 2010-05-03 09:03:47 $
  */
 #endif
 
@@ -39,7 +53,6 @@
 #define _GSSAPI_OPENSSL_H
 
 #if defined(WIN32)
-#define _WINSOCKAPI_  //rcg 9/23/03
 #   include "windows.h"
 #endif
 
@@ -52,13 +65,13 @@
 #include "globus_gsi_credential.h"
 
 #include <stdio.h>
-#include "openssl/ssl.h"
-#include "openssl/err.h"
-#include "openssl/bio.h"
-#include "openssl/pem.h"
-#include "openssl/x509.h"
-#include "openssl/x509v3.h"
-#include "openssl/stack.h"
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/bio.h>
+#include <openssl/pem.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
+#include <openssl/stack.h>
 
 #define GLOBUS_I_GSI_GSSAPI_IMPL_VERSION            1
 
@@ -106,10 +119,10 @@
 #define N2L(CHAR_ARRAY, LONG_VAL) \
    { \
        char *                           _char_array_ = CHAR_ARRAY; \
-       (LONG_VAL)  = ((*(_char_array_++)) << 24) & 0xff000000; \
-       (LONG_VAL) |= ((*(_char_array_++)) << 16) & 0xff0000; \
-       (LONG_VAL) |= ((*(_char_array_++)) << 8) & 0xff00; \
-       (LONG_VAL) |= ((*(_char_array_++)) & 0xff); \
+       (LONG_VAL)  = ((unsigned long) (*(_char_array_++))) << 24; \
+       (LONG_VAL) |= ((unsigned long) (*(_char_array_++))) << 16; \
+       (LONG_VAL) |= ((unsigned long) (*(_char_array_++))) << 8; \
+       (LONG_VAL) |= ((unsigned long) (*(_char_array_++))); \
    }
 
 #define N2S(CHAR_ARRAY, SHORT) \
@@ -138,6 +151,8 @@ typedef struct gss_name_desc_struct {
     /* gss_buffer_desc  name_buffer ; */
     gss_OID                             name_oid;
     X509_NAME *                         x509n;
+    STACK *                             group;
+    ASN1_BIT_STRING *                   group_types;
 } gss_name_desc;
 
 typedef struct gss_cred_id_desc_struct {
@@ -165,7 +180,6 @@ typedef struct gss_ctx_id_desc_struct{
     gss_con_st_t                        gss_state;
     int                                 locally_initiated;
     gss_delegation_state_t              delegation_state;
-    gss_OID_set                         extension_oids;
 } gss_ctx_id_desc;
 
 extern
@@ -176,8 +190,5 @@ const gss_OID_desc * const              gss_proxycertinfo_extension;
 
 extern
 globus_thread_once_t                    once_control;
-
-void
-globus_l_gsi_gssapi_activate_once(void);
 
 #endif /* _GSSAPI_OPENSSL_H */
