@@ -19,10 +19,10 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([argus-gsi-pep-callout], [1.2.0], [argus-support@cern.ch])
+AC_INIT([argus-gsi-pep-callout], [1.2.1], [argus-support@cern.ch])
 
-AC_CONFIG_AUX_DIR(project)
-AC_CONFIG_MACRO_DIR(project)
+AC_CONFIG_AUX_DIR([project])
+AC_CONFIG_MACRO_DIR([project])
 
 ##
 # version numbers
@@ -30,7 +30,7 @@ AC_CONFIG_MACRO_DIR(project)
 ##
 VERSION_MAJOR=1
 VERSION_MINOR=2
-VERSION_REVISION=0
+VERSION_REVISION=1
 # timestamp epoch
 VERSION_TIMESTAMP=esyscmd(perl -e 'print time')
 AC_SUBST(VERSION_MAJOR)
@@ -90,7 +90,7 @@ AC_TYPE_SIZE_T
 # LDFLAGS=-lglobus_common -lglobus_gssapi_gsi -lglobus_gssapi_error -lglobus_gss_assist -lglobus_gsi_credential
 #
 PKG_CHECK_MODULES(GLOBUS_GSI, 
-    [globus-gssapi-gsi], 
+    [globus-common globus-gridmap-callout-error globus-gssapi-gsi globus-gssapi-error globus-gss-assist globus-gsi-proxy-core globus-gsi-callback globus-gsi-credential],
     [
         AC_MSG_NOTICE([GLOBUS_GSI_CFLAGS=$GLOBUS_GSI_CFLAGS])
         AC_MSG_NOTICE([GLOBUS_GSI_LIBS=$GLOBUS_GSI_LIBS])
@@ -113,13 +113,13 @@ PKG_CHECK_MODULES(GLOBUS_GSI,
 
 # Checks for library and functions.
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([strerror strrchr calloc])
+AC_CHECK_FUNCS([strndup strerror strrchr calloc])
 
 # Sets default prefix
-AC_PREFIX_DEFAULT(/usr)
+AC_PREFIX_DEFAULT([/usr])
 
-AC_CONFIG_SRCDIR(src)
-AM_CONFIG_HEADER(src/config.h)
+AC_CONFIG_SRCDIR([src])
+AM_CONFIG_HEADER([src/config.h])
 
 AC_CONFIG_FILES([
 Makefile
