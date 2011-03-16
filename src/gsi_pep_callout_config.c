@@ -112,7 +112,7 @@ globus_result_t gsi_pep_callout_config_load(void)
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(3);
 
     // open config file
-    GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("filename: %s\n", config_filename));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("filename: %s\n", config_filename));
 
     config_file= fopen(config_filename,"r");
     if (config_file == NULL) {
@@ -173,7 +173,7 @@ globus_result_t gsi_pep_callout_config_load(void)
             goto error_exit;
         }
         int rc= 0;
-        GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("key_value(%s,%s)\n",kv->key,kv->value));
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("key_value(%s,%s)\n",kv->key,kv->value));
         if ((rc= globus_hashtable_insert(&config_hashtable, kv->key, kv)) == -1) {
             // already exists, try to link new with existing
             keyvalue_t * existing_kv= globus_hashtable_lookup(&config_hashtable,kv->key);
@@ -181,7 +181,7 @@ globus_result_t gsi_pep_callout_config_load(void)
                 while (existing_kv->next) {
                     existing_kv= existing_kv->next;
                 }
-                GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("key: %s have multiple value: %s\n",kv->key,kv->value));
+                GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("key: %s have multiple value: %s\n",kv->key,kv->value));
                 existing_kv->next= kv;
             }
             else {

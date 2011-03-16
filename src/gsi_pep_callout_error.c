@@ -114,6 +114,9 @@ static int gsi_pep_callout_error_activate(void) {
     openlog("gsi_pep_callout", LOG_CONS | LOG_NDELAY | LOG_PID, LOG_LOCAL5);
     syslog_enabled= 1;
 
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("syslog (local5) enabled: %d\n",syslog_enabled));
+
+    GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,rc);
     return rc;
 }
 
