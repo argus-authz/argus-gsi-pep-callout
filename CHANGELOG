@@ -1,5 +1,7 @@
 argus-gsi-pep-callout 1.2.1
 ---------------------------
+* callout function renamed to argus_pep_callout.
+* library version-info 1:0:0
 * Bug fix: https://savannah.cern.ch/bugs/index.php?79412
 * Bug fix: correctly read the X.509 PEM cert chain.
 
