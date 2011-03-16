@@ -139,17 +139,17 @@ int main() {
 globus_bool_t gsi_pep_callout_test_authz(int argc, ...) {
 	globus_result_t result= GLOBUS_SUCCESS;
 	globus_bool_t rc= GLOBUS_TRUE;
-	va_list authz_pep_callout_args;
+	va_list argus_pep_callout_args;
 
-	va_start(authz_pep_callout_args,argc);
-	result= authz_pep_callout( authz_pep_callout_args);
+	va_start(argus_pep_callout_args,argc);
+	result= argus_pep_callout(argus_pep_callout_args);
 	if (result!=GLOBUS_SUCCESS) {
 		globus_object_t *error= globus_error_get(result);
 		char * error_string= globus_error_print_chain(error);
 		printf("GLOBUS ERROR: %s",error_string);
 		rc= GLOBUS_FALSE;
 	}
-	va_end(authz_pep_callout_args);
+	va_end(argus_pep_callout_args);
 
 	return rc;
 }

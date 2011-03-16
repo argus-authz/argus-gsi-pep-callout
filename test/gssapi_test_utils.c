@@ -51,8 +51,9 @@ gss_cred_id_t globus_gsi_gssapi_test_acquire_credential() {
 			GSS_C_INDEFINITE, GSS_C_NO_OID_SET, GSS_C_BOTH, &credential, NULL,
 			NULL);
 
-	if (major_status != GSS_S_COMPLETE) {
-		globus_libc_printf("Failed to acquire credentials\n");
+	/* if (major_status != GSS_S_COMPLETE) { */
+	if (GSS_ERROR(major_status)) {
+		globus_libc_printf("ERROR: gss_acquire_cred failed: major=%d minor=%d\n",major_status,minor_status);
 		return GSS_C_NO_CREDENTIAL;
 	}
 

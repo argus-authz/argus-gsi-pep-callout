@@ -1,1 +1,17 @@
-the user cert and private key read from $HOME/.globus/usercert.pem and $HOME/.globus/userkey.pem. the private key *must not* be encrypted (stupid globus).
+#
+# the user cert and private key read from $HOME/.globus/usercert.pem and $HOME/.globus/userkey.pem.
+# the private key *must not* be encrypted (stupid globus).
+#
+# config files
+TEST_HOME=`pwd`
+export GSI_AUTHZ_CONF=$TEST_HOME/gsi-authz.conf
+cat $GSI_AUTHZ_CONF
+export GSI_PEP_CALLOUT_CONF=$TEST_HOME/gsi-pep-callout-demeter.conf
+cat $GSI_PEP_CALLOUT_CONF
+
+# debug level (0-9)
+export GLOBUS_CALLOUT_DEBUG_LEVEL=5
+export GLOBUS_GSSAPI_DEBUG_LEVEL=5
+export GSI_PEP_CALLOUT_DEBUG_LEVEL=5
+
+
