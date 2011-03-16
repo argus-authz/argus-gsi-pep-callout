@@ -17,9 +17,24 @@
  * $Id$
  */
 
+#ifndef EXTERN_C_BEGIN
+#    ifdef __cplusplus
+#        define EXTERN_C_BEGIN extern "C" {
+#        define EXTERN_C_END }
+#    else
+#        define EXTERN_C_BEGIN
+#        define EXTERN_C_END
+#    endif
+#endif
+
+
+
 #include <globus_common.h>
 #include <gssapi.h>
 #include <globus_gsi_credential.h>
+#include <globus_gss_assist.h>
+#include <globus_gridmap_callout_error.h>
+
 
 #include <argus/pep.h>
 
@@ -31,6 +46,10 @@
 #include "gsi_pep_callout_error.h"
 #include "gsi_pep_callout_config.h"
 #include "version.h"
+
+
+EXTERN_C_BEGIN
+
 
 /**
  * PEP client handle
@@ -101,7 +120,7 @@ static int debug_xacml_response(int debug_level, const xacml_response_t * respon
  *          unsigned int.
  *
  * It would be like to call: 
- *          authz_pep_callout(gss_ctx_id_t context,
+ *          argus_pep_callout(gss_ctx_id_t context,
  *                            char *       service,
  *                            char *       desired_identity,
  *                            char *       identity_buffer,
@@ -111,7 +130,7 @@ static int debug_xacml_response(int debug_level, const xacml_response_t * respon
  *        GLOBUS_SUCCESS upon success
  *        A globus result structure upon failure (needs to be defined better)
  */
-globus_result_t authz_pep_callout(va_list ap)
+globus_result_t argus_pep_callout(va_list ap)
 {
     // va_list params
     gss_ctx_id_t                        gss_context;
@@ -129,9 +148,7 @@ globus_result_t authz_pep_callout(va_list ap)
     char * cert_chain= NULL;
 
     // function name for error macros
-    static char * _function_name_ = "authz_pep_callout";
-
-    log_info("%s called",_function_name_);
+    static char * _function_name_ = "argus_pep_callout";
 
     // active module
     result= globus_module_activate(GSI_PEP_CALLOUT_MODULE);
@@ -152,12 +169,9 @@ globus_result_t authz_pep_callout(va_list ap)
     identity_buffer= va_arg(ap, char *);
     identity_buffer_l= va_arg(ap, unsigned int);
 
-    GSI_PEP_CALLOUT_DEBUG_PRINTF(
-            2 /* level */,
-            ("service: %s\n", service == NULL ? "NULL" : service));
-    GSI_PEP_CALLOUT_DEBUG_PRINTF(
-            2,
-            ("requested identity: %s\n",desired_identity == NULL ? "NULL" : desired_identity));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("gss_context: %p\n", (void *)gss_context));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("service: %s\n", service == NULL ? "NULL" : service));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("requested identity: %s\n",desired_identity == NULL ? "NULL" : desired_identity));
 
     // extract peer_name from context
     if ((result= gss_ctx_extract_peer_name(gss_context,&peer_name))!=GLOBUS_SUCCESS) {
@@ -169,9 +183,7 @@ globus_result_t authz_pep_callout(va_list ap)
         goto error;
     }
 
-    GSI_PEP_CALLOUT_DEBUG_PRINTF(
-            2 /* level */,
-            ("peer name: %s\n", peer_name == NULL ? "NULL" : peer_name));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("peer name: %s\n", peer_name == NULL ? "NULL" : peer_name));
 
     // extract credentials  (X509 or proxy) from context
     gss_cred_id_t cred = get_gss_cred_id(gss_context);
@@ -206,10 +218,9 @@ globus_result_t authz_pep_callout(va_list ap)
         goto error;
     }
 
-    GSI_PEP_CALLOUT_DEBUG_PRINTF(
-            9 /* level */,
-            ("X509 with chain:\n%s",
-            cert_chain == NULL ? "NULL" : cert_chain));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("X509 with chain:\n%s",cert_chain == NULL ? "NULL" : cert_chain));
+
+    syslog_info("Authorizing DN %s", peer_name);
 
     // configure PEP client
     if ((result= pep_client_configure()) != GLOBUS_SUCCESS) {
@@ -249,11 +260,8 @@ globus_result_t authz_pep_callout(va_list ap)
     else
     {
         strncpy(identity_buffer,local_identity,identity_buffer_l);
-        GSI_PEP_CALLOUT_DEBUG_PRINTF(
-                2 /* level */,
-                ("%s mapped to %s\n",
-                peer_name, identity_buffer));
-        log_info("User %s mapped to %s",peer_name,identity_buffer);
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(2, ("%s mapped to %s\n", peer_name, identity_buffer));
+        syslog_info("DN %s authorized and mapped to local username %s",peer_name,identity_buffer);
     }
     free(local_identity);
 
@@ -263,13 +271,13 @@ error:
     if (cert_chain) free(cert_chain);
 
     //XXX
-    log_debug("%s: result=%d",_function_name_,result);
+    //syslog_debug("%s: result=%d",_function_name_,result);
     if (result!=GLOBUS_SUCCESS) {
         globus_object_t *error= globus_error_get(result);
         if (error) {
             char * error_string= globus_error_print_chain(error);
             if (error_string) {
-                log_error("%s: %s", _function_name_, error_string);
+                syslog_error("%s: %s", _function_name_, error_string);
             }
         }
     }
@@ -290,12 +298,13 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
     globus_result_t result= GLOBUS_SUCCESS;
     OM_uint32 major_status;
     OM_uint32 minor_status;
-    int locally_initiated;
+    int initiator;
     gss_name_t peer;
 
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
-    // get source and target peer and initiator
+    // get if locally initiated
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("gss_inquire_context: initiator\n"));
     major_status= gss_inquire_context(&minor_status,
                                        gss_context,
                                        GLOBUS_NULL,
@@ -303,19 +312,21 @@ static globus_result_t gss_ctx_extract_peer_name(const gss_ctx_id_t gss_context,
                                        GLOBUS_NULL,
                                        GLOBUS_NULL,
                                        GLOBUS_NULL,
-                                       &locally_initiated,
+                                       &initiator,
                                        GLOBUS_NULL);
     if (GSS_ERROR(major_status)) {
         GSI_PEP_CALLOUT_GSS_ERROR(result, major_status, minor_status);
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("ERROR: gss_inquire_context: initiator: res=%d, major=%d, minor=%d (?WRONG GSSAPI LIB?)\n",result,major_status,minor_status));
         GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
         return result;
     }
 
-    // get source and target peer and initiator
+    // get source or target peer based on the local flag
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("gss_inquire_context: peer (initiator: %d)\n",initiator));
     major_status= gss_inquire_context(&minor_status,
                                        gss_context,
-                                       locally_initiated ? GLOBUS_NULL : &peer,
-                                       locally_initiated ? &peer : GLOBUS_NULL,
+                                       initiator ? GLOBUS_NULL : &peer,
+                                       initiator ? &peer : GLOBUS_NULL,
                                        GLOBUS_NULL,
                                        GLOBUS_NULL,
                                        GLOBUS_NULL,
@@ -465,15 +476,16 @@ static globus_result_t x509_get_subject(const X509 * x509, char ** out_subject) 
         return result;
     }
     char *buffer= NULL;
-    if ((rc= BIO_get_mem_data(bio,&buffer)) <= 0) {
+    long buffer_l= 0;
+    if ((buffer_l= BIO_get_mem_data(bio,&buffer)) <= 0) {
         GSI_PEP_CALLOUT_OPENSSL_ERROR(
             result,
             GSI_PEP_CALLOUT_ERROR_OPENSSL,
-            ("can't read subject bio buffer: %d",rc));
+            ("can't read subject bio buffer: %d",(int)buffer_l));
         BIO_free(bio);
         return result;
     }
-    *out_subject= strdup(buffer);
+    *out_subject= strndup(buffer,buffer_l);
     if (*out_subject==NULL) {
         GSI_PEP_CALLOUT_ERRNO_ERROR(
             result,
@@ -517,6 +529,7 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
     }
 
     int chain_l= sk_X509_num(chain);
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(5,("chain_l=%d\n",chain_l));
     for(i= 0; i<chain_l; i++) {
         X509 * x509elt= sk_X509_value(chain,i);
         if (x509elt == NULL) break;
@@ -530,18 +543,24 @@ static globus_result_t x509_convert_to_PEM(const X509 * x509, const STACK_OF(X50
             return result;
         }
     }
+    // bug fix: BIO_get_mem_data returns effective buffer length!!!!
     char *buffer= NULL;
-    if ((rc= BIO_get_mem_data(bio,&buffer)) <= 0) {
+    long buffer_l= 0;
+    if ((buffer_l= BIO_get_mem_data(bio,&buffer)) <= 0) {
         GSI_PEP_CALLOUT_OPENSSL_ERROR(
             result,
             GSI_PEP_CALLOUT_ERROR_OPENSSL,
-            ("can't read PEM bio buffer: %d",rc));
+            ("can't read PEM bio buffer: %d",(int)buffer_l));
         BIO_free(bio);
         GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(2,result);
         return result;
     }
 
-    *out_pem= strdup(buffer);
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(9,("buffer_l=%d\n",(int)buffer_l));
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(9,("buffer=[%s]\n",buffer == NULL ? "NULL" : buffer));
+
+    // bug fix: BIO_get_mem_data returns effective buffer length!!!!
+    *out_pem= strndup(buffer,buffer_l);
     if (*out_pem==NULL) {
         GSI_PEP_CALLOUT_ERRNO_ERROR(
             result,
@@ -568,6 +587,7 @@ static globus_result_t pep_client_configure(void) {
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
     const char * config= gsi_pep_callout_config_getfilename();
+    syslog_debug("Using config: %s", config);
     if ((result= gsi_pep_callout_config_load())!=GLOBUS_SUCCESS) {
         GSI_PEP_CALLOUT_ERROR(
                 result,
@@ -591,6 +611,7 @@ static globus_result_t pep_client_configure(void) {
         option= option_kv->value;
         option_kv= option_kv->next;
         GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("set PEP_OPTION_ENDPOINT_URL=%s\n",option));
+        syslog_debug("Sending authorization request to %s",option);
         if ((pep_rc= pep_setoption(pep_handle,PEP_OPTION_ENDPOINT_URL,option)) != PEP_OK) {
             GSI_PEP_CALLOUT_ERROR(
                     result,
@@ -789,6 +810,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
         }
         xacml_decision_t decision= xacml_result_getdecision(result);
         GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("XACML Decision: %s\n", decision_str(decision)));
+        syslog_debug("XACML Decision: %s", decision_str(decision));
         if (decision!=XACML_DECISION_PERMIT) {
             xacml_status_t * status= xacml_result_getstatus(result);
             xacml_statuscode_t * statuscode= xacml_status_getcode(status);
@@ -918,7 +940,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
         return result;
     }
 
-    debug_xacml_request(9,request);
+    debug_xacml_request(4,request);
 
     // 3. authorize
     xacml_response_t * response= NULL;
@@ -935,8 +957,8 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
     }
 
     GSI_PEP_CALLOUT_DEBUG_PRINTF(3,("pep_authorize(req,resp): %d\n",pep_rc));
-    debug_xacml_request(9,request);
-    debug_xacml_response(9,response);
+    debug_xacml_request(4,request);
+    debug_xacml_response(4,response);
 
     // 4. analyse XACML response
     if ((result= pep_client_parse_response(response,local_identity))!=GLOBUS_SUCCESS) {
@@ -1531,7 +1553,11 @@ globus_module_descriptor_t gsi_pep_callout_module =
 };
 
 /**
- * Module activation
+ * Module activation.
+ * Read the environment variables:
+ *   GSI_PEP_CALLOUT_DEBUG_LEVEL
+ *   GSI_PEP_CALLOUT_DEBUG_FILE
+ * and activate the required modules.
  */
 static int gsi_pep_callout_activate(void)
 {
@@ -1542,6 +1568,7 @@ static int gsi_pep_callout_activate(void)
     //
     // DEBUG variables
     //
+    gsi_pep_callout_debug_level= 0; // default
     char * tmp_string = globus_module_getenv("GSI_PEP_CALLOUT_DEBUG_LEVEL");
     if(tmp_string != GLOBUS_NULL)
     {
@@ -1550,16 +1577,23 @@ static int gsi_pep_callout_activate(void)
             gsi_pep_callout_debug_level = 0;
         }
     }
+    // default use stderr
+    gsi_pep_callout_debug_fstream= stderr;
     tmp_string = globus_module_getenv("GSI_PEP_CALLOUT_DEBUG_FILE");
     if(tmp_string != GLOBUS_NULL) {
-        gsi_pep_callout_debug_fstream = fopen(tmp_string, "a");
-        if(gsi_pep_callout_debug_fstream==NULL) {
-            return (int) GLOBUS_FAILURE;
+        if (strncmp(tmp_string,"stderr",strlen("stderr"))==0) {
+            gsi_pep_callout_debug_fstream= stderr;
         }
-    }
-    else {
-        // default use stderr
-        gsi_pep_callout_debug_fstream= stderr;
+        else if (strncmp(tmp_string,"stdout",strlen("stdout"))==0) {
+            gsi_pep_callout_debug_fstream= stdout;
+        }
+        else {
+            // it is a file name
+            gsi_pep_callout_debug_fstream = fopen(tmp_string, "a");
+            if(gsi_pep_callout_debug_fstream==NULL) {
+                return (int) GLOBUS_FAILURE;
+            }
+        }
     }
 
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(1);
@@ -1581,6 +1615,26 @@ static int gsi_pep_callout_activate(void)
                 result,
                 GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
                 ("failed to activate module: GLOBUS_GSI_GSSAPI_MODULE"));
+        GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+        return result;
+    }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GLOBUS_GSI_GSS_ASSIST_MODULE\n"));
+    result= globus_module_activate(GLOBUS_GSI_GSS_ASSIST_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+        GSI_PEP_CALLOUT_ERROR(
+                result,
+                GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+                ("failed to activate module: GLOBUS_GSI_GSS_ASSIST_MODULE"));
+        GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
+        return result;
+    }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("activate GLOBUS_GRIDMAP_CALLOUT_ERROR_MODULE\n"));
+    result= globus_module_activate(GLOBUS_GRIDMAP_CALLOUT_ERROR_MODULE);
+    if (result!=GLOBUS_SUCCESS) {
+        GSI_PEP_CALLOUT_ERROR(
+                result,
+                GSI_PEP_CALLOUT_ERROR_MODULE_ACTIVATION,
+                ("failed to activate module: GLOBUS_GRIDMAP_CALLOUT_ERROR_MODULE"));
         GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
         return result;
     }
@@ -1616,12 +1670,13 @@ static int gsi_pep_callout_activate(void)
     }
 
     // create and initialize the PEP client
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("initialize PEP handle\n"));
     pep_handle= pep_initialize();
     if (pep_handle==NULL) {
         GSI_PEP_CALLOUT_ERROR(
                 result,
                 GSI_PEP_CALLOUT_ERROR_PEP_CLIENT,
-                ("failed to create/initialize PEP client"));
+                ("failed to create/initialize PEP handle"));
     }
 
     GSI_PEP_CALLOUT_DEBUG_FCT_RETURN(1,result);
@@ -1653,3 +1708,6 @@ static int gsi_pep_callout_deactivate(void)
 
     return result;
 }
+
+EXTERN_C_END
+
