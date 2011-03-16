@@ -145,7 +145,7 @@ static void log_syslog(int prio, const char * format, va_list args) {
     vsyslog(prio, format, args);
 }
 
-void log_error(const char * format, ...) {
+void syslog_error(const char * format, ...) {
 	if (!syslog_enabled) return;
 	va_list args;
     va_start(args, format);
@@ -153,7 +153,7 @@ void log_error(const char * format, ...) {
     va_end(args);
 }
 
-void log_info(const char * format, ...) {
+void syslog_info(const char * format, ...) {
 	if (!syslog_enabled) return;
 	va_list args;
     va_start(args, format);
@@ -161,7 +161,7 @@ void log_info(const char * format, ...) {
     va_end(args);
 }
 
-void log_debug(const char * format, ...) {
+void syslog_debug(const char * format, ...) {
 	if (!syslog_enabled) return;
 	va_list args;
     va_start(args, format);

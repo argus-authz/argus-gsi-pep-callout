@@ -70,9 +70,9 @@ extern char * gsi_pep_callout_error_strings[];
 /**
  * Logging facility
  */
-void log_error(const char * format, ...);
-void log_info(const char * format, ...);
-void log_debug(const char * format, ...);
+void syslog_error(const char * format, ...);
+void syslog_info(const char * format, ...);
+void syslog_debug(const char * format, ...);
 void log_set_enabled(int enabled);
 int log_is_enabled(void);
 
