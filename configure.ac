@@ -63,7 +63,9 @@ fi
 #
 # use environment variable PKG_CONFIG_PATH=$libdir/pkgconfig
 #
-PKG_CHECK_MODULES(LIBARGUS_PEP,[libargus-pep >= 2],
+AC_MSG_NOTICE([pkg-config libargus-pep >= 2])
+PKG_CHECK_MODULES(LIBARGUS_PEP,
+    [libargus-pep >= 2],
     [
         AC_MSG_NOTICE([LIBARGUS_PEP_CFLAGS=$LIBARGUS_PEP_CFLAGS])
         AC_MSG_NOTICE([LIBARGUS_PEP_LIBS=$LIBARGUS_PEP_LIBS])
@@ -89,8 +91,9 @@ AC_TYPE_SIZE_T
 # CFLAGS=-I/usr/lib64/include/globus -I/usr/include/globus
 # LDFLAGS=-lglobus_common -lglobus_gssapi_gsi -lglobus_gssapi_error -lglobus_gss_assist -lglobus_gsi_credential
 #
+AC_MSG_NOTICE([pkg-config globus-gssapi-gsi globus-gssapi-error globus-gss-assist globus-gridmap-callout-error])
 PKG_CHECK_MODULES(GLOBUS_GSI, 
-    [globus-common globus-gridmap-callout-error globus-gssapi-gsi globus-gssapi-error globus-gss-assist globus-gsi-proxy-core globus-gsi-callback globus-gsi-credential],
+    [globus-gssapi-gsi globus-gssapi-error globus-gss-assist globus-gridmap-callout-error],
     [
         AC_MSG_NOTICE([GLOBUS_GSI_CFLAGS=$GLOBUS_GSI_CFLAGS])
         AC_MSG_NOTICE([GLOBUS_GSI_LIBS=$GLOBUS_GSI_LIBS])
@@ -106,8 +109,9 @@ PKG_CHECK_MODULES(GLOBUS_GSI,
         LDFLAGS=$ac_ldflags_backup
     ], 
     [
-        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
-        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
+        AC_MSG_ERROR([Globus libraries (globus-gssapi-gsi globus-gssapi-error globus-gss-assist globus-gridmap-callout-error) not available. Check the PKG_CONFIG_PATH environment variable.])
+#        AC_MSG_NOTICE([using CFLAGS=$CFLAGS])
+#        AC_CHECK_HEADER([globus_common.h],,[AC_MSG_ERROR(Globus header globus_common.h not found)])
     ]
 ) 
 
