@@ -3,7 +3,7 @@ Name: argus-gsi-pep-callout
 Version: 1.2.3
 Release: 1%{?dist}
 
-Summary: Argus PEP callout for globus GSI
+Summary: Argus PEP callout for Globus GSI
 
 License: ASL 2.0
 Group: System Environment/Libraries
@@ -12,27 +12,10 @@ URL: https://twiki.cern.ch/twiki/bin/view/EGEE/AuthorizationFramework
 Source: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires: globus-gridmap-callout-error-devel
-BuildRequires: globus-gssapi-gsi
-BuildRequires: pkgconfig
-BuildRequires: globus-gssapi-gsi-devel
-BuildRequires: globus-gridmap-callout-error
-BuildRequires: globus-gssapi-error-devel
-BuildRequires: globus-gss-assist-devel
-BuildRequires: libtool
-BuildRequires: argus-pep-api-c-devel
-BuildRequires: autoconf
-BuildRequires: automake
-BuildRequires: argus-pep-api-c
-BuildRequires: chrpath
-
-Requires: argus-pep-api-c
-Requires: globus-gridmap-callout-error
-Requires: globus-gssapi-gsi
-
-
 %description
-Argus PEP client callout module for globus GSI (EMI)
+Argus PEP client callout module for Globus GSI (EMI).
+Does callout to the Argus Authorization Service to authorize the user based on 
+its credentials and returns a user mapping.
 
 %prep
 %setup -q
