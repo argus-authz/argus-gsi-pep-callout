@@ -1,3 +1,11 @@
+argus-gsi-pep-callout 1.2.3
+---------------------------
+* Self managed packaging with spec file for RPM generation.
+
+argus-gsi-pep-callout 1.2.2
+---------------------------
+* New version number for EMI-2 release.
+
 argus-gsi-pep-callout 1.2.1
 ---------------------------
 * callout function renamed to argus_pep_callout.
