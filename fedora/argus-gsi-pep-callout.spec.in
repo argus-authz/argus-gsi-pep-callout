@@ -1,7 +1,7 @@
 Name: argus-gsi-pep-callout
 
-Version: 1.2.3
-Release: 1%{?dist}
+Version: @@SPEC_VERSION@@
+Release: @@SPEC_RELEASE@@%{?dist}
 
 Summary: Argus PEP callout for Globus GSI
 
