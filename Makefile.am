@@ -19,7 +19,7 @@
 
 #SUBDIRS = src test
 SUBDIRS = src
-EXTRA_DIST = autotools.sh CHANGELOG COPYRIGHT LICENSE etc
+EXTRA_DIST = autotools.sh CHANGELOG COPYRIGHT LICENSE etc fedora debian
 
 docdir = $(datadir)/doc/$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 doc_DATA = README AUTHORS CHANGELOG COPYRIGHT LICENSE etc/gsi-authz.conf etc/gsi-pep-callout.conf
