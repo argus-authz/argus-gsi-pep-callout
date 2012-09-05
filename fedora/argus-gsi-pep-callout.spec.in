@@ -54,7 +54,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgsi_pep_callout.so.1.0.0
 %{_libdir}/libgsi_pep_callout.so.1
 
-%doc COPYRIGHT LICENSE README etc/gsi-pep-callout.conf etc/gsi-authz.conf CHANGELOG
+%doc COPYING LICENSE README etc/gsi-pep-callout.conf etc/gsi-authz.conf ChangeLog
 
 %changelog
 * Fri Aug 3 2012 Valery Tschopp <valery.tschopp@switch.ch> 1.2.3-1
