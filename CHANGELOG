@@ -1,6 +1,7 @@
 argus-gsi-pep-callout 1.2.3
 ---------------------------
 * Self managed packaging with spec file for RPM generation.
+* Self managed packaging with Debian control files.
 
 argus-gsi-pep-callout 1.2.2
 ---------------------------
