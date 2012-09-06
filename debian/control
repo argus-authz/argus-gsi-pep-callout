@@ -3,7 +3,7 @@ Section: libs
 Priority: extra
 Maintainer: Valery Tschopp <valery.tschopp@switch.ch>
 Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, pkg-config, libargus-pep-dev, libglobus-gridmap-callout-error-dev, libglobus-gssapi-gsi-dev, libglobus-gssapi-error-dev, libglobus-gss-assist-dev
-Standards-Version: 3.8.4
+Standards-Version: 3.9.1
 Homepage: https://twiki.cern.ch/twiki/bin/view/EGEE/AuthZPEPGSIConfig
 Vcs-Git: git://github.com/argus-authz/argus-gsi-pep-callout.git
 Vcs-Browser: https://github.com/argus-authz/argus-gsi-pep-callout
