@@ -26,3 +26,4 @@ ltmain.sh
 /project/ltsugar.m4
 /project/ltversion.m4
 /project/lt~obsolete.m4
+/src/version.h
