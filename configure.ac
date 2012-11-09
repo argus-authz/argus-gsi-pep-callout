@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([argus-gsi-pep-callout], [1.2.3], [argus-support@cern.ch])
+AC_INIT([argus-gsi-pep-callout], [1.3.0], [argus-support@cern.ch])
 
 AC_CONFIG_AUX_DIR([project])
 AC_CONFIG_MACRO_DIR([project])
@@ -29,8 +29,8 @@ AC_CONFIG_MACRO_DIR([project])
 # used for version.h.in -> version.h
 ##
 VERSION_MAJOR=1
-VERSION_MINOR=2
-VERSION_REVISION=3
+VERSION_MINOR=3
+VERSION_REVISION=0
 # timestamp epoch
 VERSION_TIMESTAMP=esyscmd(perl -e 'print time')
 AC_SUBST(VERSION_MAJOR)
