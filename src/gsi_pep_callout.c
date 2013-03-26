@@ -141,7 +141,7 @@ globus_result_t argus_pep_callout(va_list ap)
 
     // internal variables
     char * peer_name= NULL;
-    char * local_identity= NULL;
+    char * authorized_identity= NULL;
     globus_result_t result = GLOBUS_SUCCESS;
     X509 * x509= NULL;
     STACK_OF(X509) * chain= NULL;
@@ -231,7 +231,7 @@ globus_result_t argus_pep_callout(va_list ap)
         goto error;
     }
 
-    if ((result= pep_client_authorize(peer_name,cert_chain,service,&local_identity)) !=  GLOBUS_SUCCESS) {
+    if ((result= pep_client_authorize(peer_name,cert_chain,service,&authorized_identity)) !=  GLOBUS_SUCCESS) {
         GSI_PEP_CALLOUT_ERROR(
             result,
             GSI_PEP_CALLOUT_ERROR_AUTHZ,
@@ -240,30 +240,30 @@ globus_result_t argus_pep_callout(va_list ap)
     }
 
     if (desired_identity != NULL) {
-        if (strncmp(desired_identity,local_identity,strlen(local_identity)) != 0) {
+        if (strncmp(desired_identity,authorized_identity,strlen(authorized_identity)) != 0) {
             GSI_PEP_CALLOUT_ERROR(
                 result,
                 GSI_PEP_CALLOUT_ERROR_AUTHZ,
-                ("Can not map desired identity %s to local identity %s", desired_identity,local_identity));
+                ("Can not map desired identity %s to authorized identity %s", desired_identity,authorized_identity));
             goto error;
         }
     }
 
-    if(strlen(local_identity) + 1 > identity_buffer_l)
+    if(strlen(authorized_identity) + 1 > identity_buffer_l)
     {
         GSI_PEP_CALLOUT_ERROR(
             result,
             GSI_PEP_CALLOUT_ERROR_IDENTITY_BUFFER,
             ("Local identity length: %d Buffer length: %d\n",
-             strlen(local_identity), identity_buffer_l));
+             strlen(authorized_identity), identity_buffer_l));
     }
     else
     {
-        strncpy(identity_buffer,local_identity,identity_buffer_l);
+        strncpy(identity_buffer,authorized_identity,identity_buffer_l);
         GSI_PEP_CALLOUT_DEBUG_PRINTF(2, ("%s mapped to %s\n", peer_name, identity_buffer));
         syslog_info("DN %s authorized and mapped to local username %s",peer_name,identity_buffer);
     }
-    free(local_identity);
+    free(authorized_identity);
 
 
 error:
@@ -890,7 +890,7 @@ static globus_result_t pep_client_parse_response(const xacml_response_t * respon
 /**
  *
  */
-static globus_result_t pep_client_authorize(const char *peer_name, const char * cert_chain, const char * service, char ** local_identity) {
+static globus_result_t pep_client_authorize(const char *peer_name, const char * cert_chain, const char * service, char ** authorized_identity) {
     static char * _function_name_ = "pep_client_authorize";
     globus_result_t result= GLOBUS_SUCCESS;
 
@@ -961,7 +961,7 @@ static globus_result_t pep_client_authorize(const char *peer_name, const char * 
     debug_xacml_response(4,response);
 
     // 4. analyse XACML response
-    if ((result= pep_client_parse_response(response,local_identity))!=GLOBUS_SUCCESS) {
+    if ((result= pep_client_parse_response(response,authorized_identity))!=GLOBUS_SUCCESS) {
         GSI_PEP_CALLOUT_ERROR(
                         result,
                         GSI_PEP_CALLOUT_ERROR_AUTHZ,
