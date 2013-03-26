@@ -1,10 +1,4 @@
 /autom4te.cache
-/target
-/rpmbuild
-/debbuild
-/RPMS
-/tgz
-/stage
 /*.tar.gz
 Makefile
 Makefile.in
