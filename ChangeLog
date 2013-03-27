@@ -1,3 +1,10 @@
+argus-gsi-pep-callout 1.3.1
+---------------------------
+* Implements a caching mechanism of the authorized identity (username)
+  for GSI OpenSSH which calls to gsi-pep-callout twice (first authN then authZ)
+  https://savannah.cern.ch/bugs/index.php?101032
+* Library version-info 1:1:0
+
 argus-gsi-pep-callout 1.3.0
 ---------------------------
 * Packaging moved to separate projects.
