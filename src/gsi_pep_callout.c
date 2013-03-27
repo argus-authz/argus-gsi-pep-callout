@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * $Id$
  */
 
 #ifndef EXTERN_C_BEGIN
@@ -71,6 +70,13 @@ int gsi_pep_callout_debug_level;
  */
 FILE * gsi_pep_callout_debug_fstream;
 
+/**
+ * Cache for a previously authorized identity
+ */
+static char * identity_cache = NULL;
+static void identity_cache_clear();
+static void identity_cache_set(const char * authorized_identity);
+static char * identity_cache_get(const char * desired_identity);
 
 /**
  * Module activation/deactivation prototypes
@@ -185,6 +191,19 @@ globus_result_t argus_pep_callout(va_list ap)
 
     GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("peer name: %s\n", peer_name == NULL ? "NULL" : peer_name));
 
+    // caching mechanism
+    if (desired_identity == NULL) {
+	    identity_cache_clear();
+    }
+    else {
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("check cache for: %s\n", desired_identity));
+        authorized_identity= identity_cache_get(desired_identity);
+        if (authorized_identity != NULL) {
+            GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("identity already authorized: %s\n", authorized_identity));
+            goto identity_cached;
+        }
+    }
+
     // extract credentials  (X509 or proxy) from context
     gss_cred_id_t cred = get_gss_cred_id(gss_context);
     if (cred == NULL) {
@@ -238,7 +257,10 @@ globus_result_t argus_pep_callout(va_list ap)
             ("Can not map %s to local identity", peer_name));
         goto error;
     }
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("cache authorized identity: %s\n",authorized_identity));
+    identity_cache_set(authorized_identity);
 
+identity_cached:
     if (desired_identity != NULL) {
         if (strncmp(desired_identity,authorized_identity,strlen(authorized_identity)) != 0) {
             GSI_PEP_CALLOUT_ERROR(
@@ -1537,7 +1559,47 @@ static int debug_xacml_response(int debug_level,const xacml_response_t * respons
     return 0;
 }
 
+/**
+ * Caching
+ */
+static void identity_cache_clear() {
+    // function name for error macros
+    static char * _function_name_ = "identity_cache_clear";
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("clear cache: %s\n", identity_cache == NULL ? "NULL" : identity_cache));
+    if (identity_cache != NULL) {
+       free(identity_cache); 
+    }
+    identity_cache= NULL;
+}
 
+static void identity_cache_set(const char * authorized_identity) {
+    // function name for error macros
+    static char * _function_name_ = "identity_cache_set";
+    identity_cache_clear();
+    GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("set cache: %s\n", authorized_identity));
+    identity_cache= strdup(authorized_identity);
+}
+
+/**
+ * returns NULL if desired_identity was not previousely cache or if cache is empty
+ * caller is responsible to free the returned identity.
+ */
+static char * identity_cache_get(const char * desired_identity) {
+    // function name for error macros
+    static char * _function_name_ = "identity_cache_get";
+    if (identity_cache == NULL) {
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("cache is empty\n"));
+        return NULL;
+    }
+    else {
+        GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("cache: %s\n",identity_cache));
+        if (strncmp(identity_cache,desired_identity,strlen(desired_identity)) != 0) {
+            GSI_PEP_CALLOUT_DEBUG_PRINTF(4,("cache doesn't match: %s != %s\n",identity_cache,desired_identity));
+            return NULL;
+        }
+        return strdup(identity_cache);
+    }
+}
 
 /**
  * Module descriptor static initializer.
