@@ -42,7 +42,7 @@ libgsi_pep_callout_la_CFLAGS = \
 
 # linker flags
 libgsi_pep_callout_la_LDFLAGS = \
-    -version-info 1:0:0
+    -version-info 1:1:0
 
 
 # libraries to link with
