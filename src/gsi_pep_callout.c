@@ -200,6 +200,7 @@ globus_result_t argus_pep_callout(va_list ap)
         authorized_identity= identity_cache_get(desired_identity);
         if (authorized_identity != NULL) {
             GSI_PEP_CALLOUT_DEBUG_PRINTF(2,("identity already authorized: %s\n", authorized_identity));
+            syslog_info("DN %s already authorized: %s (cache)",peer_name,authorized_identity);
             goto identity_cached;
         }
     }
