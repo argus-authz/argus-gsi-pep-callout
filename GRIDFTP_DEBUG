@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 # 
-# globus debugging example
+# globus GridFTP debugging
 #
 
 # config files
@@ -10,10 +10,19 @@ cat $GSI_AUTHZ_CONF
 export GSI_PEP_CALLOUT_CONF=/home/tschopp/gsi-pep-callout.conf
 
 # debug level (0-9)
-#export GLOBUS_CALLOUT_DEBUG_LEVEL=5
-#export GLOBUS_GSSAPI_DEBUG_LEVEL=5
-export GSI_PEP_CALLOUT_DEBUG_LEVEL=0
+export GLOBUS_CALLOUT_DEBUG_LEVEL=1
+export GLOBUS_GSSAPI_DEBUG_LEVEL=1
+export GSI_PEP_CALLOUT_DEBUG_LEVEL=3
 
-# and start gridftp server
-/usr/sbin/globus-gridftp-server -d 255 -p 9999 -debug
+# start gridftp server (console debug)
+sudo /usr/sbin/globus-gridftp-server -d 255 -p 9999 -debug
+
+# start gridftp daemon
+#/usr/sbin/globus-gridftp-server -d 255 -p 9999
+
 set +x
+
+# TEST:
+# slcs-init -i switch.ch
+# voms-proxy-init -voms dteam
+# uberftp -P 9999 HOSTNAME

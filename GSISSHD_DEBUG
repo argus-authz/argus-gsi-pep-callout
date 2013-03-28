@@ -1,0 +1,33 @@
+#!/bin/bash
+set -x
+# 
+# globus GSI OpenSSH debugging
+#
+
+# config files
+export GSI_AUTHZ_CONF=/home/tschopp/gsi-authz.conf
+echo
+echo "-------------------------------"
+cat $GSI_AUTHZ_CONF
+export GSI_PEP_CALLOUT_CONF=/home/tschopp/gsi-pep-callout.conf
+echo
+echo "-------------------------------"
+cat $GSI_PEP_CALLOUT_CONF
+echo "-------------------------------"
+
+# debug level (0-9)
+export GLOBUS_CALLOUT_DEBUG_LEVEL=1
+export GLOBUS_GSSAPI_DEBUG_LEVEL=1
+export GSI_PEP_CALLOUT_DEBUG_LEVEL=4
+#export GSI_PEP_CALLOUT_DEBUG_FILE=/tmp/gsi-pep-callout.log
+
+# and start gsi-openssh server (debug console)
+# sudo /usr/sbin/gsisshd -4 -p 9999 -d -d -d
+# and start gsi-openssh server (daemon)
+sudo /usr/sbin/gsisshd -4 -p 9999
+set +x
+
+# TEST:
+# slcs-init -i switch.ch
+# voms-proxy-init -voms dteam
+# gsissh -p 9999 -k -v HOSTNAME
