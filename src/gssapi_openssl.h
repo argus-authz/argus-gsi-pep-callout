@@ -151,7 +151,7 @@ typedef struct gss_name_desc_struct {
     /* gss_buffer_desc  name_buffer ; */
     gss_OID                             name_oid;
     X509_NAME *                         x509n;
-    STACK *                             group;
+    _STACK *                            group;
     ASN1_BIT_STRING *                   group_types;
 } gss_name_desc;
 
