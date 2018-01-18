@@ -7,8 +7,8 @@ pipeline {
       cloud 'Kube mwdevel'
       label 'build'
       containerTemplate {
-        name 'centos'
-        image '7'
+        name 'builder'
+        image 'centos:7'
         ttyEnabled true
         command 'cat'
       }
@@ -23,16 +23,7 @@ pipeline {
   stages {
     stage('prepare') {
       steps {
-        container('build'){
-          sh "yum install -y epel-release"
-          sh "yum install -y git openssl-devel"
-          sh "yum -y groupinstall 'Development Tools'"
-          sh """
-          	yum install -y globus-gssapi-gsi globus-gssapi-gsi-devel globus-gssapi-gsi \\
-           		globus-gssapi-gsi-devel globus-gssapi-error globus-gssapi-error-devel \\
-           		globus-gss-assist globus-gss-assist-devel globus-gridmap-callout-error \\
-           		globus-callout globus-callout-devel globus-gridmap-callout-error globus-gridmap-callout-error-devel 
-           """
+        container('builder'){
           script{
           	def repofile = """
 [argus-nightly]
@@ -40,16 +31,27 @@ name=argus-nightly
 baseurl=https://jenkins.cloud.ba.infn.it/job/argus-nightly/lastStableBuild/artifact/el7/RPMS/
 gpgcheck=0
           	"""
-          	writeFile file: '/etc/yum.repos.d/argus.repo', text: "${repofile}"
-          	sh "yum install -y argus-pep-api-c argus-pep-api-c-devel"
+          	writeFile file: 'argus.repo', text: "${repofile}"
+          	sh "cp argus.repo /etc/yum.repos.d/argus.repo"
           }
+          
+          sh "yum install -y epel-release"
+          sh "yum -y groupinstall 'Development Tools'"
+          sh """
+          	yum install -y git openssl-devel \\
+          		globus-gridmap-callout-error-devel \\
+  				globus-gssapi-gsi-devel \\
+  				globus-gssapi-error-devel \\
+  				globus-gss-assist-devel \\
+  				argus-pep-api-c-devel
+           """
         }
       }
     }
 
-    stage('build') {
+    stage('builder') {
       steps {
-        container('build'){
+        container('builder'){
           sh './autotools.sh'
           sh './configure'
           sh 'make'
