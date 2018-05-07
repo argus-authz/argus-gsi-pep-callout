@@ -28,7 +28,7 @@ pipeline {
           	def repofile = """
 [argus-nightly]
 name=argus-nightly
-baseurl=https://jenkins.cloud.ba.infn.it/job/argus-nightly/lastStableBuild/artifact/el7/RPMS/
+baseurl=https://repo.cloud.cnaf.infn.it/repository/argus/nightly/el7/
 gpgcheck=0
           	"""
           	writeFile file: 'argus.repo', text: "${repofile}"
@@ -39,11 +39,11 @@ gpgcheck=0
           sh "yum -y groupinstall 'Development Tools'"
           sh """
           	yum install -y git openssl-devel \\
-          		globus-gridmap-callout-error-devel \\
-  				globus-gssapi-gsi-devel \\
-  				globus-gssapi-error-devel \\
-  				globus-gss-assist-devel \\
-  				argus-pep-api-c-devel
+				globus-gridmap-callout-error-devel \\
+				globus-gssapi-gsi-devel \\
+				globus-gssapi-error-devel \\
+				globus-gss-assist-devel \\
+				argus-pep-api-c-devel
            """
         }
       }
@@ -58,14 +58,6 @@ gpgcheck=0
         }
       }
     }
-
-    stage('result'){
-      steps {
-        script {
-          currentBuild.result = 'SUCCESS'
-        }
-      }
-    }
   }
   
   post {
@@ -75,7 +67,7 @@ gpgcheck=0
     
     changed {
       script{
-        if('SUCCESS'.equals(currentBuild.result)) {
+        if('SUCCESS'.equals(currentBuild.currentResult)) {
           slackSend color: 'good', message: "${env.JOB_NAME} - #${env.BUILD_NUMBER} Back to normal (<${env.BUILD_URL}|Open>)"
         }
       }
