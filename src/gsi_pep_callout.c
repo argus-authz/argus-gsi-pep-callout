@@ -39,7 +39,7 @@
 
 #include <stdlib.h>
 
-#include "gssapi_openssl.h" /* internal, define gss_ctx_id_t and gss_cred_id_t structure */
+#include "gsi_pep_callout_globus_internal.h" /* internal, define gss_ctx_id_t and gss_cred_id_t structure */
 
 #include "gsi_pep_callout.h"
 #include "gsi_pep_callout_error.h"
@@ -392,7 +392,8 @@ static gss_cred_id_t get_gss_cred_id(const gss_ctx_id_t gss_context)
         return NULL;
     }
     else {
-        return (gss_cred_id_t)gss_context->peer_cred_handle;
+	pep_gss_ctx_id_desc *local_handle=(pep_gss_ctx_id_desc*)gss_context;
+	return local_handle->peer_cred_handle;
     }
 }
 
@@ -406,14 +407,14 @@ static globus_result_t gss_cred_extract_cert(const gss_cred_id_t gss_cred, X509 
     globus_result_t result= GLOBUS_SUCCESS;
 
     /* Internally a gss_cred_id_t type is a pointer to a gss_cred_id_desc */
-    gss_cred_id_desc * cred_desc= NULL;
+    pep_gss_cred_id_desc * cred_desc= NULL;
     globus_gsi_cred_handle_t gsi_cred;
 
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
-    /* cast to gss_cred_id_desc */
+    /* cast to pep_gss_cred_id_desc */
     if (gss_cred != GSS_C_NO_CREDENTIAL) {
-        cred_desc = (gss_cred_id_desc *) gss_cred;
+        cred_desc = (pep_gss_cred_id_desc *) gss_cred;
         gsi_cred = cred_desc->cred_handle;
         if ((result= globus_gsi_cred_get_cert(gsi_cred, out_cert)) != GLOBUS_SUCCESS) {
             GSI_PEP_CALLOUT_ERROR(
@@ -443,14 +444,14 @@ static globus_result_t gss_cred_extract_cert_chain(const gss_cred_id_t gss_cred,
     globus_result_t result= GLOBUS_SUCCESS;
 
     // internally a gss_cred_id_t type is a pointer to a gss_cred_id_desc
-    gss_cred_id_desc * cred_desc= NULL;
+    pep_gss_cred_id_desc * cred_desc= NULL;
     globus_gsi_cred_handle_t gsi_cred;
 
     GSI_PEP_CALLOUT_DEBUG_FCT_BEGIN(2);
 
-    /* cast to gss_cred_id_desc */
+    /* cast to pep_gss_cred_id_desc */
     if (gss_cred != GSS_C_NO_CREDENTIAL) {
-        cred_desc = (gss_cred_id_desc *) gss_cred;
+        cred_desc = (pep_gss_cred_id_desc *) gss_cred;
         gsi_cred = cred_desc->cred_handle;
         if ((result= globus_gsi_cred_get_cert_chain(gsi_cred,out_chain)) != GLOBUS_SUCCESS) {
             GSI_PEP_CALLOUT_ERROR(
