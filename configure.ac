@@ -19,7 +19,7 @@
 #
 ##
 # IMPORTANT! When updating version also update VERSION_* variables (here below)
-AC_INIT([argus-gsi-pep-callout], [1.3.1], [argus-support@cern.ch])
+AC_INIT([argus-gsi-pep-callout], [1.3.2], [argus-support@cern.ch])
 
 AC_CONFIG_AUX_DIR([project])
 AC_CONFIG_MACRO_DIR([project])
