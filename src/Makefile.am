@@ -24,8 +24,7 @@ lib_LTLIBRARIES = libgsi_pep_callout.la
 
 # sources not distributed
 libgsi_pep_callout_la_SOURCES = \
-    gssapi_openssl.h \
-    globus_gsi_gss_constants.h \
+    gsi_pep_callout_globus_internal.h \
     gsi_pep_callout.h \
     gsi_pep_callout.c \
     gsi_pep_callout_error.h \
